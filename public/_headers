@@ -1,0 +1,28 @@
+# ── Security headers (all responses) ─────────────────────────────────────────
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-XSS-Protection: 1; mode=block
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Cache-Control: no-cache, must-revalidate
+
+# ── Vite hashed assets — content-addressed, cache 1 year ─────────────────────
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# ── Service worker — always revalidate ───────────────────────────────────────
+/sw.js
+  Cache-Control: no-cache, must-revalidate
+
+# ── RSS feed — 1 hour ─────────────────────────────────────────────────────────
+/feed.xml
+  Cache-Control: public, max-age=3600
+
+# ── Uploaded images — 30 days ────────────────────────────────────────────────
+/images/*
+  Cache-Control: public, max-age=2592000
+
+# ── Favicon — 1 day ──────────────────────────────────────────────────────────
+/favicon.svg
+  Cache-Control: public, max-age=86400

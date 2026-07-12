@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>Beta Black Lotus</title>
+    <link>https://example.com/</link>
+    <description>A personal weblog. Notes, essays, and field recordings.</description>
+    <language>en-us</language>
+    <atom:link href="https://example.com/feed.xml" rel="self" type="application/rss+xml" />
+
+    <item>
+      <title>Welcome to Beta Black Lotus</title>
+      <link>https://example.com/#/post/welcome-to-the-terminal</link>
+      <guid isPermaLink="false">terminal-welcome-to-the-terminal</guid>
+      <pubDate>Sun, 28 Jun 2026 00:00:00 GMT</pubDate>
+      <description>A short note on why I started this weblog, what I plan to write about, and a few ground rules for the kind of place I want this to be.</description>
+      <media:content url="https://images.pexels.com/photos/270557/pexels-photo-270557.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1200" medium="image" />
+    </item>
+
+    <item>
+      <title>On Keeping a Notebook in Public</title>
+      <link>https://example.com/#/post/on-keeping-a-notebook-in-public</link>
+      <guid isPermaLink="false">terminal-on-keeping-a-notebook-in-public</guid>
+      <pubDate>Mon, 15 Jun 2026 00:00:00 GMT</pubDate>
+      <description>Joan Didion wrote that we keep a notebook to remember what it was like to be ourselves. I think keeping one in public is a slightly different exercise.</description>
+      <media:content url="https://images.pexels.com/photos/633432/pexels-photo-633432.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1200" medium="image" />
+    </item>
+
+    <item>
+      <title>Field Recording: The Creek in July</title>
+      <link>https://example.com/#/post/field-recording-the-creek-in-july</link>
+      <guid isPermaLink="false">terminal-field-recording-the-creek-in-july</guid>
+      <pubDate>Wed, 03 Jun 2026 00:00:00 GMT</pubDate>
+      <description>A short field recording from the creek behind the old mill, with notes on the equipment used and the sound of low water over smooth stones.</description>
+      <media:content url="https://images.pexels.com/photos/2406467/pexels-photo-2406467.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1200" medium="image" />
+    </item>
+
+    <item>
+      <title>A Walk Through the Old Quarter</title>
+      <link>https://example.com/#/post/a-walk-through-the-old-quarter</link>
+      <guid isPermaLink="false">terminal-a-walk-through-the-old-quarter</guid>
+      <pubDate>Wed, 20 May 2026 00:00:00 GMT</pubDate>
+      <description>A photo essay from a morning walk through the old quarter, with a short video clip of the square at the top of the hill.</description>
+      <media:content url="https://images.pexels.com/photos/2078126/pexels-photo-2078126.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1200" medium="image" />
+    </item>
+
+    <item>
+      <title>On Using Old Tools</title>
+      <link>https://example.com/#/post/on-using-old-tools</link>
+      <guid isPermaLink="false">terminal-on-using-old-tools</guid>
+      <pubDate>Sat, 02 May 2026 00:00:00 GMT</pubDate>
+      <description>A short defense of using software that is older than you are. Not out of nostalgia, but because the constraints are often the point.</description>
+      <media:content url="https://images.pexels.com/photos/261880/pexels-photo-261880.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1200" medium="image" />
+    </item>
+  </channel>
+</rss>
