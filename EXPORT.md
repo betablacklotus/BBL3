@@ -1,10 +1,18 @@
-# The Terminal — Export & Deployment Guide
+# Beta Black Lotus — Cloudflare Pages Deployment Guide
 
-A lightweight, retro-styled personal blog built with React + Vite. This guide covers exporting the site for static hosting (e.g. GoDaddy Deluxe shared hosting), adding Disqus comments, and configuring Bunny Stream media.
+A lightweight, monospace-styled personal blog built with React + Vite. This guide covers deploying the site to Cloudflare Pages (free tier) with the domain `betablacklotus.com`.
 
 ---
 
-## 1. Build the static site
+## 1. Prerequisites
+
+- A Cloudflare account (free) at [cloudflare.com](https://cloudflare.com)
+- Node.js 18+ installed locally
+- Your domain `betablacklotus.com` registered (any registrar)
+
+---
+
+## 2. Build the static site
 
 ```bash
 npm install
@@ -18,105 +26,120 @@ dist/
   index.html
   feed.xml
   favicon.svg
+  _redirects          — SPA catch-all routing
+  _headers            — security + caching headers
   assets/
     *.js
     *.css
+  images/
 ```
 
-Upload everything inside `dist/` to your hosting provider's `public_html/` (or equivalent) directory.
-
 ---
 
-## 2. Deploy to GoDaddy Deluxe shared hosting
+## 3. Deploy to Cloudflare Pages
 
-1. Log in to your GoDaddy hosting control panel (cPanel).
-2. Open **File Manager** → `public_html`.
-3. Upload all files from the `dist/` directory into `public_html/`.
-   - You can zip `dist/`, upload the zip, and use cPanel's "Extract" feature.
-4. The site should be live at your domain immediately.
+### Option A — Direct upload (simplest)
 
-### URL routing note
+1. Go to the [Cloudflare Dashboard](https://dash.cloudflare.com) → **Workers & Pages** → **Create** → **Pages** → **Upload assets**.
+2. Enter a project name (e.g. `beta-black-lotus`).
+3. Drag the **contents** of the `dist/` folder into the upload zone (not the folder itself — the files inside it).
+4. Click **Deploy site**.
 
-This site uses **hash-based routing** (`#/post/slug`, `#/about`, etc.) so it works on any static host without server-side configuration. No `.htaccess` rewrite rules are needed for routing.
-
----
-
-## 3. Secure the admin panel
-
-The admin panel lives at the obscured path `#/backstage-3k9mxf2p7qw4`. Client-side security (password hashing, rate limiting, IP blocking) is implemented, but for **true security on shared hosting**, add HTTP Basic Auth via `.htaccess`:
-
-### Step A: Create a password file
-
-In cPanel, go to **Directory Privacy** or use the **htpasswd** tool. Alternatively, create a `.htpasswd` file manually:
+### Option B — Wrangler CLI
 
 ```bash
-htpasswd -c .htpasswd adminuser
+npx wrangler pages deploy dist --project-name=beta-black-lotus
 ```
 
-Upload `.htpasswd` to a directory **above** `public_html` if possible (e.g. your home directory), so it is not web-accessible.
+If you haven't used Wrangler before, you'll be prompted to log in to Cloudflare via browser. After the first deploy, subsequent runs reuse the same project.
 
-### Step B: Protect the admin route
+### Option C — Git integration (automatic deploys)
 
-Because this site uses hash routing, the admin panel is served from `index.html` like every other route. To add an extra server-side layer, you can:
-
-- **Option 1 (recommended):** Move the admin to a separate subdomain (e.g. `admin.yourdomain.com`) protected by cPanel's Directory Privacy.
-- **Option 2:** Add a JavaScript-based gate before the admin route (already implemented — the login screen).
-
-### Step C: Change the default password
-
-The default admin password is `ChangeMe!Str0ngP@ss`. **Change it immediately** after first login:
-
-1. Go to `https://yourdomain.com/#/backstage-3k9mxf2p7qw4`
-2. Log in with the default password.
-3. Click **Security** → **Change password**.
-4. Choose a strong password (12+ characters, upper/lower/number/symbol).
+1. Push your project to a GitHub or GitLab repository.
+2. In the Cloudflare Dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**.
+3. Select your repository.
+4. Set the build configuration:
+   - **Framework preset:** Vite
+   - **Build command:** `npm run build`
+   - **Build output directory:** `dist`
+5. Click **Save and Deploy**. Every future push to your main branch triggers an automatic rebuild and deploy.
 
 ---
 
-## 4. Configure your domain
+## 4. Add your custom domain
 
-Update the site URL in these files before building:
+1. In the Cloudflare Pages dashboard, select your project → **Custom domains** → **Set up a custom domain**.
+2. Enter `betablacklotus.com`. Click **Continue**.
+3. If your domain is already on Cloudflare DNS, the required CNAME record is added automatically.
+4. If your domain is on a different registrar, Cloudflare will show you the CNAME record to add:
+   - **Type:** CNAME
+   - **Name:** `@` (or leave blank for apex)
+   - **Target:** `beta-black-lotus.pages.dev` (or the target shown)
+5. Repeat for `www.betablacklotus.com` if you want the www subdomain.
+6. DNS propagation typically takes a few minutes to an hour.
 
-- `src/seo.ts` — change `SITE_URL` to your domain
-- `src/rss.ts` — change `SITE_URL` to your domain
-- `public/feed.xml` — change all `https://example.com` references to your domain
-- `src/pages/ContactPage.tsx` — change the email address
+### SSL/TLS
+
+Cloudflare provides free SSL automatically. In the dashboard under **SSL/TLS**, set the mode to **Full** (or **Full (strict)** if your origin supports it). For a Pages-only setup, this is handled for you.
 
 ---
 
-## 5. Adding Disqus comments (future)
+## 5. URL routing
 
-The post template already includes a clearly marked placeholder. To activate Disqus:
+This site uses the **History API** for clean URLs (`/post/slug`, `/music`, `/archive`, etc.). The `public/_redirects` file contains:
 
-1. Create an account at [disqus.com](https://disqus.com) and register your site.
-2. Copy your **Disqus shortname** from the admin dashboard.
-3. Open `src/pages/PostPage.tsx` and find the section marked `DISQUS_PLACEHOLDER`.
-4. Replace the placeholder `<div id="disqus_thread">…</div>` with:
-
-```html
-<div id="disqus_thread"></div>
-<script>
-  var disqus_config = function () {
-    this.page.url = window.location.href;
-    this.page.identifier = "{post.slug}";
-  };
-  (function() {
-    var d = document, s = d.createElement('script');
-    s.src = 'https://YOUR-SHORTNAME.disqus.com/embed.js';
-    s.setAttribute('data-timestamp', +new Date());
-    (d.head || d.body).appendChild(s);
-  })();
-</script>
+```
+/* /index.html 200
 ```
 
-5. Replace `YOUR-SHORTNAME` with your actual Disqus shortname.
-6. Rebuild and redeploy: `npm run build`.
+Cloudflare Pages reads this file automatically and serves `index.html` for all paths, so client-side routing works without any server configuration.
 
 ---
 
-## 6. Bunny Stream media configuration
+## 6. Security & caching headers
 
-### Video and audio embeds
+The `public/_headers` file is included in the build and Cloudflare Pages applies it automatically. It sets:
+
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: SAMEORIGIN`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `X-XSS-Protection: 1; mode=block`
+- `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+
+Plus long-lived caching for hashed Vite assets (1 year, immutable), and shorter caches for the RSS feed (1 hour), images (30 days), favicon (1 day), and service worker (always revalidate).
+
+---
+
+## 7. Secure the admin panel
+
+The admin panel lives at the obscured path `/backstage-3k9mxf2p7qw4`. Client-side security (password hashing, rate limiting, IP blocking) is implemented, but **for true security**:
+
+1. **Change the default password** — Log in at `https://betablacklotus.com/backstage-3k9mxf2p7qw4` and change it immediately through Security settings.
+2. **Consider Cloudflare Access** — For an additional server-side layer, set up Cloudflare Zero Trust (free tier) with an Access policy that requires email authentication before reaching the admin path. This is the strongest option and costs nothing.
+
+---
+
+## 8. Domain configuration checklist
+
+The following files contain the site URL. They are already set to `https://www.betablacklotus.com` — verify before deploying:
+
+| File | Setting |
+|------|---------|
+| `src/seo.ts` | `SITE_URL` |
+| `src/rss.ts` | `SITE_URL` |
+| `public/feed.xml` | All `<link>` and `<atom:link>` URLs |
+
+---
+
+## 9. RSS feed
+
+A pre-built `feed.xml` is included in `public/` and copied to `dist/` on build. After editing posts in the admin panel, use the **Download RSS** button to generate an updated `feed.xml` and upload it to your server (or rebuild and redeploy).
+
+The feed is served at `https://www.betablacklotus.com/feed.xml` with a 1-hour cache.
+
+---
+
+## 10. Bunny Stream media configuration
 
 Posts support Bunny Stream video and audio embeds via custom markdown syntax:
 
@@ -125,28 +148,16 @@ Posts support Bunny Stream video and audio embeds via custom markdown syntax:
 :::bunny-audio LIBRARY_ID AUDIO_ID
 ```
 
-The markdown parser converts these into clean iframe embeds using Bunny's player.
-
-### Token authentication (recommended for protection)
+### Token authentication (recommended)
 
 1. In your **Bunny Stream** dashboard, open your library.
 2. Enable **Token Authentication**.
-3. Set **Allowed Referrers / Domain Restrictions** to your site's domain (e.g. `yourdomain.com`).
-4. Generate signed URLs with expiration for any direct media links.
-5. The iframe embeds use Bunny's player, which handles token auth server-side — no extra configuration needed in the embed code.
-
-### Admin panel fields
-
-In the admin panel's **Media** tab for each post, you can set:
-- Bunny Stream Library ID
-- Bunny Stream Video ID
-- Bunny Stream Audio ID
-
-These are for reference. The actual embeds are placed in the markdown content using the `:::bunny-video` and `:::bunny-audio` syntax above.
+3. Set **Allowed Referrers / Domain Restrictions** to `betablacklotus.com`.
+4. The iframe embeds use Bunny's player, which handles token auth server-side.
 
 ---
 
-## 7. Media protection notes
+## 11. Media protection notes
 
 Client-side protections implemented:
 - Right-click (context menu) disabled on images, video, and audio
@@ -154,95 +165,65 @@ Client-side protections implemented:
 - `user-select: none` on media containers
 - Keyboard shortcuts (Ctrl+S, Ctrl+U) blocked while media is focused
 
-**Important:** Client-side protection is a deterrent only and can be bypassed. For real protection:
-- Use **Bunny Stream token authentication** for audio/video (server-side protection)
-- Enable **hotlink protection** in your hosting control panel for images
+Client-side protection is a deterrent only. For real protection:
+- Use **Bunny Stream token authentication** for audio/video
+- Enable **hotlink protection** via Cloudflare's Scrape Shield settings
 - Consider watermarking sensitive images
 
 ---
 
-## 8. RSS feed
+## 12. After-deploy checklist
 
-A pre-built `feed.xml` is included in `public/` and copied to `dist/` on build. After editing posts in the admin panel, use the **Download RSS** button to generate an updated `feed.xml` and upload it to your server.
-
-The feed includes:
-- Post title
-- Description/excerpt
-- Publish date
-- Full link
-- Featured image (via `<media:content>`)
-
----
-
-## 9. Editing content
-
-### Edit existing pages
-
-| Page | File |
-|------|------|
-| Home | `src/pages/HomePage.tsx` |
-| About | `src/pages/AboutPage.tsx` |
-| Archive | `src/pages/ArchivePage.tsx` |
-| Contact | `src/pages/ContactPage.tsx` |
-| All Posts | `src/pages/AllPostsPage.tsx` |
-
-### Add a new post
-
-Posts are defined in `src/samplePosts.ts`. Copy an existing post object and change:
-- `slug` — unique URL identifier
-- `title` — post title
-- `date` — ISO date string (YYYY-MM-DD)
-- `content` — markdown body
-- `excerpt` — short description
-- `tags` — array of tag strings
-- `featuredImage` — image URL
-- `pinned` — set to `true` to pin to top
-
-### Markdown support
-
-The built-in parser supports:
-- Headings (`#`, `##`, etc.)
-- Bold (`**text**`), italic (`*text*`), inline code (`` `code` ``)
-- Links (`[text](url)`) and images (`![alt](url)`)
-- Code blocks (triple backticks)
-- Ordered and unordered lists
-- Blockquotes (`>`)
-- Horizontal rules (`---`)
-- Galleries (consecutive image lines)
-- Bunny Stream embeds (`:::bunny-video`, `:::bunny-audio`)
+- [ ] Visit `https://www.betablacklotus.com` — site loads
+- [ ] Navigate to a post (e.g. `/welcome-to-the-terminal`) — page loads (not 404)
+- [ ] Check `https://www.betablacklotus.com/feed.xml` — RSS feed is valid
+- [ ] Test on mobile — hamburger menu and responsive layout work
+- [ ] Visit `/backstage-3k9mxf2p7qw4` — admin login appears
+- [ ] Change the default admin password
+- [ ] Verify security headers at [securityheaders.com](https://securityheaders.com/?q=betablacklotus.com)
+- [ ] Test social sharing — OG meta tags resolve to correct title/description/image
 
 ---
 
-## 10. Project structure
+## 13. Project structure
 
 ```
 src/
-  App.tsx              — main app + router
-  router.ts            — hash-based router
+  App.tsx              — main app + router switch
+  router.ts            — History API router
   types.ts             — TypeScript types
   markdown.ts          — lightweight markdown parser
   postStore.ts         — post storage (localStorage)
+  pageStore.ts         — standalone page storage
   samplePosts.ts       — sample post content
   security.ts          — auth, rate limiting, IP blocking
   adminAuth.ts         — admin login/session
   seo.ts               — Open Graph + Twitter meta tags
   rss.ts               — RSS feed generator
-  index.css            — global styles (IBM Plex Mono, retro theme)
+  index.css            — global styles (IBM Plex Mono theme)
   components/
     Header.tsx         — fixed header with nav + search
     PostCard.tsx       — post preview card
     MediaProtect.tsx   — media protection wrapper
+    MarkdownEditor.tsx — admin markdown editor
+    GalleryBuilder.tsx — gallery layout tool
+    Lightbox.tsx       — image lightbox
+    EditFab.tsx        — floating edit button (admin)
   pages/
     HomePage.tsx       — infinite scroll feed
-    PostPage.tsx       — individual post + Disqus placeholder
-    AllPostsPage.tsx   — all posts list
-    AboutPage.tsx      — about page
+    PostPage.tsx       — individual post
+    VideosPage.tsx     — video posts
+    MusicPage.tsx      — music posts
     ArchivePage.tsx    — archive by year
-    ContactPage.tsx    — contact form
     TagPage.tsx        — posts by tag
+    StandalonePage.tsx — standalone pages (EPK, Contact, etc.)
+    GalleryPreviewPage.tsx — gallery preview
     AdminLoginPage.tsx — admin login (rate-limited)
     AdminPanel.tsx     — post management + security
 public/
+  _redirects           — SPA catch-all for Cloudflare Pages
+  _headers             — security + caching headers
   feed.xml             — RSS feed
   favicon.svg          — site icon
+  sw.js                — service worker
 ```
