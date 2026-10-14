@@ -9,6 +9,7 @@ import { navigate } from '../router';
 import { downloadRssFeed } from '../rss';
 import { MarkdownEditor } from '../components/MarkdownEditor';
 import { getBunnyConfig, setBunnyConfig, isStorageConfigured, BunnyConfig } from '../bunnyConfig';
+import { getSiteSettings, setSiteSettings } from '../siteSettings';
 import { uploadImage } from '../imageUpload';
 import { downloadPostAsMarkdown, markdownToPost } from '../markdownExport';
 import type { Post, Page } from '../types';
@@ -464,7 +465,11 @@ function SettingsTab({
 }) {
   return (
     <div className="flex flex-col gap-10 max-w-2xl">
-      <BunnySettingsForm />
+      <SiteSettingsForm />
+
+      <div className="border-t rule pt-8">
+        <BunnySettingsForm />
+      </div>
 
       <div className="border-t rule pt-8">
         <SecuritySection blockedIPs={blockedIPs} failedAttempts={failedAttempts} />
@@ -488,6 +493,42 @@ function SettingsTab({
           Reset posts to defaults
         </button>
       </div>
+    </div>
+  );
+}
+
+function SiteSettingsForm() {
+  const [tagline, setTagline] = useState(getSiteSettings().tagline);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSiteSettings({ tagline });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <div>
+      <h2 className="text-base font-semibold mb-1">Site</h2>
+      <p className="text-sm text-muted mb-5">
+        Controls the tagline shown beneath your site title on the home page.
+      </p>
+      <form onSubmit={handleSave} className="flex flex-col gap-4">
+        <div>
+          <label className="text-xs text-muted block mb-1">Home page tagline</label>
+          <input
+            type="text"
+            value={tagline}
+            onChange={(e) => setTagline(e.target.value)}
+            className="field"
+            placeholder="We travel the spaceways from planet to planet."
+          />
+        </div>
+        <button type="submit" className="btn btn-primary self-start flex items-center gap-1.5">
+          {saved ? <><Check size={14} /> Saved</> : 'Save site settings'}
+        </button>
+      </form>
     </div>
   );
 }

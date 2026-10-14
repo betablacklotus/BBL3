@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { PostCard } from '../components/PostCard';
 import { getAllPosts } from '../postStore';
 import { useMeta } from '../seo';
+import { getSiteSettings } from '../siteSettings';
 
 const PAGE_SIZE = 3;
 
@@ -54,7 +55,7 @@ export function HomePage() {
       <div className="pt-10 pb-6 border-b rule">
         <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Beta Black Lotus</h1>
         <p className="text-sm sm:text-base text-muted">
-          "We travel the spaceways from planet to planet."
+          "{getSiteSettings().tagline}"
         </p>
       </div>
 
