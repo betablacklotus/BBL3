@@ -553,6 +553,37 @@ function BunnySettingsForm() {
         Credentials are stored in this browser only and sent only to Bunny's APIs when uploading.
       </p>
 
+      {/* Setup guide */}
+      <details className="border rule p-4 text-sm">
+        <summary className="font-semibold cursor-pointer select-none">How to set up Bunny.net (step by step)</summary>
+        <div className="mt-4 flex flex-col gap-4 text-muted">
+          <div>
+            <p className="font-semibold text-ink mb-1">Step 1 — Create a Storage Zone</p>
+            <p className="mb-1">In the Bunny dashboard, go to <strong>Storage &rarr; Add Storage Zone</strong>. Give it a name (e.g. <code>myblog</code>) and pick a region closest to your visitors. That name goes in the <strong>Zone name</strong> field here.</p>
+          </div>
+          <div>
+            <p className="font-semibold text-ink mb-1">Step 2 — Copy the Storage API key</p>
+            <p className="mb-1">Open the storage zone you just created. Under <strong>FTP &amp; API Access</strong> you'll see the API key (also called the password). Copy it into the <strong>Storage API key</strong> field here. This key lets the admin panel upload images directly to your storage zone.</p>
+          </div>
+          <div>
+            <p className="font-semibold text-ink mb-1">Step 3 — Create a Pull Zone and connect it</p>
+            <p className="mb-1">Go to <strong>CDN &rarr; Add Pull Zone</strong>. Set the origin to <strong>Bunny Storage</strong> and select the storage zone from Step 1. Bunny will give you a CDN hostname like <code>myblog.b-cdn.net</code>. Paste the full URL including <code>https://</code> into the <strong>Pull zone CDN URL</strong> field here. This is the public URL your images will be served from.</p>
+          </div>
+          <div>
+            <p className="font-semibold text-ink mb-1">Step 4 — Enable CORS on the storage zone</p>
+            <p className="mb-1">In your storage zone settings, scroll to <strong>CORS Headers</strong> and add your site's domain (e.g. <code>https://your-site.com</code>). Without this, the browser will block image uploads from the admin panel. If your site has no fixed domain yet, add <code>*</code> temporarily and tighten it later.</p>
+          </div>
+          <div>
+            <p className="font-semibold text-ink mb-1">Step 5 — (Optional) Set up Bunny Stream</p>
+            <p className="mb-1">For video and audio, go to <strong>Stream &rarr; Libraries</strong> and create a library (or use the default). The <strong>Library ID</strong> is on the library page. The <strong>API key</strong> is under <strong>Settings &rarr; API</strong> in that library. These are only needed if you embed video or audio in posts.</p>
+          </div>
+          <div>
+            <p className="font-semibold text-ink mb-1">Step 6 — Save and test</p>
+            <p>Click <strong>Save Bunny settings</strong>, then go to the <strong>Media</strong> tab and try uploading an image. If it works, you'll get a CDN URL you can paste into posts. If you see a CORS error, double-check Step 4.</p>
+          </div>
+        </div>
+      </details>
+
       <form onSubmit={handleSave} className="flex flex-col gap-6">
         {/* Storage */}
         <div className="border rule p-4 flex flex-col gap-4">
@@ -567,6 +598,7 @@ function BunnySettingsForm() {
                 className="field"
                 placeholder="myblog"
               />
+              <p className="text-xs text-muted mt-1">The storage zone name from Bunny dashboard &rarr; Storage.</p>
             </div>
             <div>
               <label className="text-xs text-muted block mb-1">Storage API key</label>
@@ -578,6 +610,7 @@ function BunnySettingsForm() {
                 placeholder="••••••••"
                 autoComplete="new-password"
               />
+              <p className="text-xs text-muted mt-1">Found under the storage zone &rarr; FTP &amp; API Access.</p>
             </div>
             <div>
               <label className="text-xs text-muted block mb-1">Pull zone CDN URL</label>
@@ -588,6 +621,7 @@ function BunnySettingsForm() {
                 className="field"
                 placeholder="https://myblog.b-cdn.net"
               />
+              <p className="text-xs text-muted mt-1">The CDN hostname from your pull zone, with https://.</p>
             </div>
             <div>
               <label className="text-xs text-muted block mb-1">Storage region endpoint</label>
@@ -598,11 +632,11 @@ function BunnySettingsForm() {
                 className="field"
                 placeholder="storage.bunnycdn.com"
               />
-              <p className="text-xs text-muted mt-1">Default: storage.bunnycdn.com (Frankfurt)</p>
+              <p className="text-xs text-muted mt-1">Default: storage.bunnycdn.com (Frankfurt). Change if your zone is in a different region.</p>
             </div>
           </div>
           <p className="text-xs text-muted border-t rule pt-3">
-            <strong>CORS required:</strong> In your Bunny Storage zone settings, add your site's origin under &quot;CORS Headers&quot; so browser uploads work.
+            <strong>CORS required:</strong> In your Bunny Storage zone settings, add your site's origin under &quot;CORS Headers&quot; so browser uploads work. See Step 4 in the guide above.
           </p>
         </div>
 
@@ -619,6 +653,7 @@ function BunnySettingsForm() {
                 className="field"
                 placeholder="123456"
               />
+              <p className="text-xs text-muted mt-1">From Stream &rarr; Libraries &rarr; your library page.</p>
             </div>
             <div>
               <label className="text-xs text-muted block mb-1">Stream API key</label>
@@ -630,6 +665,7 @@ function BunnySettingsForm() {
                 placeholder="••••••••"
                 autoComplete="new-password"
               />
+              <p className="text-xs text-muted mt-1">From the library &rarr; Settings &rarr; API.</p>
             </div>
           </div>
         </div>
