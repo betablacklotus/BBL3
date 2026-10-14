@@ -64,6 +64,11 @@ export function HomePage() {
         {visiblePosts.map((post) => (
           <PostCard key={post.slug} post={post} />
         ))}
+        {allPosts.length === 0 && (
+          <div className="py-16 text-center">
+            <p className="text-muted text-sm">No posts yet.</p>
+          </div>
+        )}
       </div>
 
       {/* Sentinel for infinite scroll */}

@@ -2,7 +2,7 @@ import type { Post } from './types';
 import { SAMPLE_POSTS } from './samplePosts';
 import { excerptFromMarkdown } from './markdown';
 
-const STORAGE_KEY = 'terminal_blog_posts_v1';
+const STORAGE_KEY = 'terminal_blog_posts_v2';
 
 // Repairs known broken image URLs that may be persisted in localStorage.
 function migratePosts(posts: Post[]): Post[] {
