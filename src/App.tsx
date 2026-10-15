@@ -24,6 +24,8 @@ function App() {
     })();
   }, []);
 
+  const isAdmin = route.path === '/backstage-3k9mxf2p7qw4';
+
   let page;
   switch (route.path) {
     case '/':
@@ -67,7 +69,7 @@ function App() {
     <div className="min-h-screen bg-paper">
       <Header />
       <main style={{ paddingTop: 64 }}>
-        {ready ? page : <div className="max-w-prose mx-auto px-4 sm:px-6 pt-20 text-center text-sm text-muted">Loading…</div>}
+        {isAdmin ? page : ready ? page : <div className="max-w-prose mx-auto px-4 sm:px-6 pt-20 text-center text-sm text-muted">Loading…</div>}
       </main>
       <Footer />
     </div>
