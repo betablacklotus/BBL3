@@ -1,7 +1,6 @@
 import type { Page } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+import { SUPABASE_URL, ANON_KEY } from './supabaseConfig';
 
 let _pages: Page[] | null = null;
 let _loading: Promise<void> | null = null;

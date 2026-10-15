@@ -2,8 +2,7 @@ import type { Post } from './types';
 import { SAMPLE_POSTS } from './samplePosts';
 import { excerptFromMarkdown } from './markdown';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+import { SUPABASE_URL, ANON_KEY } from './supabaseConfig';
 
 let _posts: Post[] | null = null;
 let _loading: Promise<void> | null = null;

@@ -1,4 +1,5 @@
 import { getBunnyConfig, isStorageConfigured } from './bunnyConfig';
+import { SUPABASE_URL, ANON_KEY } from './supabaseConfig';
 
 export async function uploadImage(file: File): Promise<string> {
   const configured = await isStorageConfigured();
@@ -20,14 +21,12 @@ export async function uploadImage(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  const res = await fetch(`${supabaseUrl}/functions/v1/bunny-upload`, {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/bunny-upload`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${anonKey}`,
+      Authorization: `Bearer ${ANON_KEY}`,
+      apikey: ANON_KEY,
     },
     body: JSON.stringify({
       storageZone,

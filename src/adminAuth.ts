@@ -1,20 +1,13 @@
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+import { SUPABASE_URL, ANON_KEY } from './supabaseConfig';
 
 const SESSION_KEY = 'terminal_admin_session_v1';
 const SESSION_DURATION = 2 * 60 * 60 * 1000;
 
 function edgeUrl(): string {
-  if (!SUPABASE_URL) {
-    throw new Error('Supabase URL is not configured. Check your environment variables.');
-  }
   return `${SUPABASE_URL}/functions/v1/admin-data`;
 }
 
 function edgeHeaders(): Record<string, string> {
-  if (!ANON_KEY) {
-    throw new Error('Supabase anon key is not configured. Check your environment variables.');
-  }
   return {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${ANON_KEY}`,
