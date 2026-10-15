@@ -58,7 +58,7 @@ export function HomePage() {
       <div className="pt-10 pb-6 border-b rule">
         <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Beta Black Lotus</h1>
         <p className="text-sm sm:text-base text-muted">
-          "{tagline}"
+          {tagline}
         </p>
       </div>
 
