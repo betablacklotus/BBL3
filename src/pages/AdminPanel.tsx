@@ -636,11 +636,11 @@ function BunnySettingsForm() {
             <div>
               <label className="text-xs text-muted block mb-1">Pull zone CDN URL</label>
               <input
-                type="url"
+                type="text"
                 value={cfg.cdnUrl}
                 onChange={(e) => update('cdnUrl', e.target.value)}
                 className="field"
-                placeholder="https://myblog.b-cdn.net"
+                placeholder="https://betablacklotus.b-cdn.net"
               />
             </div>
             <div>
