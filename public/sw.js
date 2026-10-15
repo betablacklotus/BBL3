@@ -1,4 +1,4 @@
-const CACHE = 'bbl-v1';
+const CACHE = 'bbl-v2';
 
 // On install: cache the app shell
 self.addEventListener('install', (e) => {

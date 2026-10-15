@@ -98,8 +98,9 @@ export function AdminLoginPage() {
           }
         }
       }
-    } catch {
-      setError('Could not connect to the server. Please try again.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not connect to the server. Please try again.';
+      setError(msg);
     }
     setLoading(false);
   };

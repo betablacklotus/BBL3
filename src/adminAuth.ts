@@ -11,7 +11,8 @@ export async function login(password: string): Promise<{ success: boolean; messa
     body: JSON.stringify({ action: 'login', password }),
   });
   if (!res.ok) {
-    throw new Error('Login failed. Please try again.');
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `Server error (${res.status})`);
   }
   const data = await res.json();
   if (data.success) {
