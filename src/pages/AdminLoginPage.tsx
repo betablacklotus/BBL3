@@ -73,30 +73,33 @@ export function AdminLoginPage() {
     }
 
     setLoading(true);
-    const result = await login(password);
-    recordAttempt(ip, result.success);
+    try {
+      const result = await login(password);
+      recordAttempt(ip, result.success);
 
-    if (result.success) {
-      setLoggedIn(true);
-      setPassword('');
-    } else {
-      // Check if we should lock the account
-      if (shouldLockAccount()) {
-        lockAccount();
-        setLockInfo(isAccountLocked());
-        setError('Too many failed attempts. Account locked for 30 minutes.');
-      } else if (shouldBlockIP(ip)) {
-        blockIP(ip, 'Too many failed login attempts');
-        setIpBlockInfo(isIPBlocked(ip));
-        setError('Too many failed attempts from your IP. IP blocked for 1 hour.');
+      if (result.success) {
+        setLoggedIn(true);
+        setPassword('');
       } else {
-        const recent = getRecentFailedAttempts().length;
-        const ipFails = getIPFailedAttempts(ip);
-        setError(`Invalid password. ${5 - recent} attempt(s) remaining before account lock.`);
-        if (ipFails > 5) {
-          setError(`Invalid password. ${10 - ipFails} attempt(s) remaining before IP block.`);
+        if (shouldLockAccount()) {
+          lockAccount();
+          setLockInfo(isAccountLocked());
+          setError('Too many failed attempts. Account locked for 30 minutes.');
+        } else if (shouldBlockIP(ip)) {
+          blockIP(ip, 'Too many failed login attempts');
+          setIpBlockInfo(isIPBlocked(ip));
+          setError('Too many failed attempts from your IP. IP blocked for 1 hour.');
+        } else {
+          const recent = getRecentFailedAttempts().length;
+          const ipFails = getIPFailedAttempts(ip);
+          setError(`Invalid password. ${5 - recent} attempt(s) remaining before account lock.`);
+          if (ipFails > 5) {
+            setError(`Invalid password. ${10 - ipFails} attempt(s) remaining before IP block.`);
+          }
         }
       }
+    } catch {
+      setError('Could not connect to the server. Please try again.');
     }
     setLoading(false);
   };
