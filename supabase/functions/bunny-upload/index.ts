@@ -5,6 +5,7 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req: Request) => {
+  // Edge function: bunny-upload
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
