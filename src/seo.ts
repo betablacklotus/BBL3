@@ -36,7 +36,7 @@ function setCanonical(href: string) {
 
 export function useMeta(opts: MetaOptions): void {
   useEffect(() => {
-    const title = opts.title ? `${opts.title} — ${SITE_NAME}` : `${SITE_NAME} — A Personal Weblog`;
+    const title = opts.title ? `${opts.title} — ${SITE_NAME}` : SITE_NAME;
     document.title = title;
 
     const desc = opts.description || 'A personal weblog. Notes, essays, and field recordings.';
