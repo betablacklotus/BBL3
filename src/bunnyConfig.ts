@@ -25,7 +25,7 @@ export async function getBunnyConfig(): Promise<BunnyConfig> {
   if (_cache) return _cache;
   const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+    headers: { 'Content-Type': 'application/json', apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
     body: JSON.stringify({ action: 'getBunnyConfig' }),
   });
   if (!res.ok) return { ...DEFAULTS };
@@ -37,7 +37,7 @@ export async function getBunnyConfig(): Promise<BunnyConfig> {
 export async function setBunnyConfig(cfg: BunnyConfig): Promise<void> {
   await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+    headers: { 'Content-Type': 'application/json', apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
     body: JSON.stringify({ action: 'setBunnyConfig', config: cfg }),
   });
   _cache = cfg;

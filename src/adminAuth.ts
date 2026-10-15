@@ -1,13 +1,31 @@
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 const SESSION_KEY = 'terminal_admin_session_v1';
 const SESSION_DURATION = 2 * 60 * 60 * 1000;
 
+function edgeUrl(): string {
+  if (!SUPABASE_URL) {
+    throw new Error('Supabase URL is not configured. Check your environment variables.');
+  }
+  return `${SUPABASE_URL}/functions/v1/admin-data`;
+}
+
+function edgeHeaders(): Record<string, string> {
+  if (!ANON_KEY) {
+    throw new Error('Supabase anon key is not configured. Check your environment variables.');
+  }
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${ANON_KEY}`,
+    apikey: ANON_KEY,
+  };
+}
+
 export async function login(password: string): Promise<{ success: boolean; message: string }> {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
+  const res = await fetch(edgeUrl(), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+    headers: edgeHeaders(),
     body: JSON.stringify({ action: 'login', password }),
   });
   if (!res.ok) {
@@ -53,13 +71,14 @@ export async function changePassword(
   current: string,
   next: string
 ): Promise<{ success: boolean; message: string }> {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
+  const res = await fetch(edgeUrl(), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+    headers: edgeHeaders(),
     body: JSON.stringify({ action: 'changePassword', currentPassword: current, newPassword: next }),
   });
   if (!res.ok) {
-    throw new Error('Password change failed. Please try again.');
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `Server error (${res.status})`);
   }
   return await res.json();
 }

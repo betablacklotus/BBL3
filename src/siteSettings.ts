@@ -25,7 +25,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 export async function setSiteSettings(settings: SiteSettings): Promise<void> {
   await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+    headers: { 'Content-Type': 'application/json', apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
     body: JSON.stringify({ action: 'setSiteSettings', tagline: settings.tagline }),
   });
 }
