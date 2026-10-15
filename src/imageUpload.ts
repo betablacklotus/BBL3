@@ -8,25 +8,42 @@ export async function uploadImage(file: File): Promise<string> {
   }
 
   const { storageZone, storageKey, cdnUrl, storageHostname } = getBunnyConfig();
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').toLowerCase();
-  const path = `${year}/${month}/${now.getTime()}-${safeName}`;
 
-  const res = await fetch(`https://${storageHostname}/${storageZone}/${path}`, {
-    method: 'PUT',
+  const fileData = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result.split(',')[1]);
+    };
+    reader.onerror = () => reject(new Error('Failed to read file.'));
+    reader.readAsDataURL(file);
+  });
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  const res = await fetch(`${supabaseUrl}/functions/v1/bunny-upload`, {
+    method: 'POST',
     headers: {
-      AccessKey: storageKey,
-      'Content-Type': file.type || 'application/octet-stream',
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${anonKey}`,
     },
-    body: file,
+    body: JSON.stringify({
+      storageZone,
+      storageKey,
+      storageHostname,
+      cdnUrl,
+      fileName: file.name,
+      contentType: file.type || 'application/octet-stream',
+      fileData,
+    }),
   });
 
   if (!res.ok) {
-    const text = await res.text().catch(() => res.statusText);
-    throw new Error(`Bunny upload failed (${res.status}): ${text}`);
+    const body = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(body.error || `Upload failed (${res.status})`);
   }
 
-  return `${cdnUrl.replace(/\/$/, '')}/${path}`;
+  const data = await res.json();
+  return data.url;
 }
