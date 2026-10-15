@@ -34,8 +34,12 @@ Deno.serve(async (req: Request) => {
       bytes[i] = binaryString.charCodeAt(i);
     }
 
+    const cleanHostname = storageHostname
+      .replace(/^https?:\/\//i, "")
+      .replace(/\/.*$/, "");
+
     const bunnyRes = await fetch(
-      `https://${storageHostname}/${storageZone}/${path}`,
+      `https://${cleanHostname}/${storageZone}/${path}`,
       {
         method: "PUT",
         headers: {

@@ -644,7 +644,7 @@ function BunnySettingsForm() {
               />
             </div>
             <div>
-              <label className="text-xs text-muted block mb-1">Storage region endpoint</label>
+              <label className="text-xs text-muted block mb-1">Storage region endpoint (hostname only, no https://)</label>
               <input
                 type="text"
                 value={cfg.storageHostname}
