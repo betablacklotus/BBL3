@@ -1,57 +1,27 @@
-// Admin credential storage. Default password is set on first run.
-// CHANGE THE DEFAULT PASSWORD immediately after first login.
-// In production, also protect /backstage-3k9mxf2p7qw4 with .htaccess (see EXPORT.md).
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-import { hashPassword, verifyPassword } from './security';
-
-const CRED_KEY = 'terminal_admin_cred_v1';
 const SESSION_KEY = 'terminal_admin_session_v1';
-const SESSION_DURATION = 2 * 60 * 60 * 1000; // 2 hours
-
-const DEFAULT_PASSWORD = 'ChangeMe!Str0ngP@ss';
-
-interface StoredCred {
-  passwordHash: string;
-  salt: string;
-  initialized: boolean;
-}
-
-async function getCredentials(): Promise<StoredCred | null> {
-  try {
-    const raw = localStorage.getItem(CRED_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as StoredCred;
-  } catch {
-    return null;
-  }
-}
-
-async function ensureInitialized(): Promise<StoredCred> {
-  let cred = await getCredentials();
-  if (!cred) {
-    const { hash, salt } = await hashPassword(DEFAULT_PASSWORD);
-    cred = { passwordHash: hash, salt, initialized: true };
-    try {
-      localStorage.setItem(CRED_KEY, JSON.stringify(cred));
-    } catch {
-      // non-fatal
-    }
-  }
-  return cred;
-}
+const SESSION_DURATION = 2 * 60 * 60 * 1000;
 
 export async function login(password: string): Promise<{ success: boolean; message: string }> {
-  const cred = await ensureInitialized();
-  const valid = await verifyPassword(password, cred.passwordHash, cred.salt);
-  if (valid) {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+    body: JSON.stringify({ action: 'login', password }),
+  });
+  if (!res.ok) {
+    throw new Error('Login failed. Please try again.');
+  }
+  const data = await res.json();
+  if (data.success) {
     try {
       localStorage.setItem(SESSION_KEY, String(Date.now() + SESSION_DURATION));
     } catch {
       // non-fatal
     }
-    return { success: true, message: 'Login successful.' };
   }
-  return { success: false, message: 'Invalid password.' };
+  return { success: data.success, message: data.message };
 }
 
 export function isLoggedIn(): boolean {
@@ -82,19 +52,17 @@ export async function changePassword(
   current: string,
   next: string
 ): Promise<{ success: boolean; message: string }> {
-  const cred = await ensureInitialized();
-  const valid = await verifyPassword(current, cred.passwordHash, cred.salt);
-  if (!valid) return { success: false, message: 'Current password is incorrect.' };
-  const { hash, salt } = await hashPassword(next);
-  const updated: StoredCred = { passwordHash: hash, salt, initialized: true };
-  try {
-    localStorage.setItem(CRED_KEY, JSON.stringify(updated));
-  } catch {
-    return { success: false, message: 'Could not save new password.' };
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+    body: JSON.stringify({ action: 'changePassword', currentPassword: current, newPassword: next }),
+  });
+  if (!res.ok) {
+    throw new Error('Password change failed. Please try again.');
   }
-  return { success: true, message: 'Password changed.' };
+  return await res.json();
 }
 
 export function isDefaultPassword(): boolean {
-  return DEFAULT_PASSWORD === 'ChangeMe!Str0ngP@ss';
+  return true;
 }

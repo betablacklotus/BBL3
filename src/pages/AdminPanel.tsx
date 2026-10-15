@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BookOpen, Image as ImageIcon, Settings, Upload, Copy, Check, FilePlus, FileDown, FileText } from 'lucide-react';
 import { getAllPosts, pinPost, unpinPost, deletePost, updatePost, resetPosts, createPost, getPost, formatDate } from '../postStore';
 import { getAllPages, createPage, updatePage, deletePage } from '../pageStore';
@@ -35,52 +35,65 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
   const [isNew, setIsNew] = useState(false);
   const [tab, setTab] = useState<'posts' | 'pages' | 'media' | 'settings'>('posts');
   const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
 
   const refresh = () => setPosts(getAllPosts());
   const flash = (msg: string) => { setMessage(msg); setTimeout(() => setMessage(''), 3500); };
 
-  const handlePin = (slug: string, pin: boolean) => {
-    if (pin) pinPost(slug); else unpinPost(slug);
+  const handlePin = async (slug: string, pin: boolean) => {
+    setBusy(true);
+    if (pin) await pinPost(slug); else await unpinPost(slug);
     refresh();
+    setBusy(false);
   };
 
-  const handleDelete = (slug: string) => {
+  const handleDelete = async (slug: string) => {
     if (confirm('Delete this post? This cannot be undone.')) {
-      deletePost(slug);
+      setBusy(true);
+      await deletePost(slug);
       refresh();
+      setBusy(false);
     }
   };
 
-  const handleSave = (post: Post) => {
+  const handleSave = async (post: Post) => {
+    setBusy(true);
     if (isNew) {
-      if (!createPost(post)) {
+      const ok = await createPost(post);
+      if (!ok) {
         alert(`A post with slug "${post.slug}" already exists. Change the slug and try again.`);
+        setBusy(false);
         return;
       }
     } else {
-      post.pinned ? pinPost(post.slug) : unpinPost(post.slug);
-      updatePost(post.slug, post);
+      post.pinned ? await pinPost(post.slug) : await unpinPost(post.slug);
+      await updatePost(post.slug, post);
     }
     refresh();
     setEditing(null);
     setIsNew(false);
     flash(isNew ? 'Post created.' : 'Post saved.');
+    setBusy(false);
   };
 
-  const handleSaveAndView = (post: Post) => {
+  const handleSaveAndView = async (post: Post) => {
+    setBusy(true);
     if (isNew) {
-      if (!createPost(post)) {
+      const ok = await createPost(post);
+      if (!ok) {
         alert(`A post with slug "${post.slug}" already exists. Change the slug and try again.`);
+        setBusy(false);
         return;
       }
     } else {
-      post.pinned ? pinPost(post.slug) : unpinPost(post.slug);
-      updatePost(post.slug, post);
+      post.pinned ? await pinPost(post.slug) : await unpinPost(post.slug);
+      await updatePost(post.slug, post);
     }
     refresh();
     setEditing(null);
     setIsNew(false);
     window.open(`/${post.slug}`, '_blank', 'noopener');
+    setBusy(false);
   };
 
   const handleNew = () => {
@@ -122,11 +135,13 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
     posts.forEach((p, i) => setTimeout(() => downloadPostAsMarkdown(p), i * 100));
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (confirm('Reset all posts to the original sample content? This will delete any posts you have created.')) {
-      resetPosts();
+      setBusy(true);
+      await resetPosts();
       refresh();
       flash('Posts reset to defaults.');
+      setBusy(false);
     }
   };
 
@@ -138,6 +153,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
         onSave={handleSave}
         onSaveAndView={handleSaveAndView}
         onCancel={() => { setEditing(null); setIsNew(false); }}
+        busy={busy}
       />
     );
   }
@@ -238,6 +254,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                         type="checkbox"
                         checked={!!post.pinned}
                         onChange={(e) => handlePin(post.slug, e.target.checked)}
+                        disabled={busy}
                         className="cursor-pointer"
                         title="Pin to top of feed"
                       />
@@ -253,6 +270,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                         </button>
                         <button
                           onClick={() => handleDelete(post.slug)}
+                          disabled={busy}
                           className="btn"
                           style={{ padding: '3px 9px', fontSize: 12 }}
                         >
@@ -278,7 +296,6 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
 
       {/* ── Pages tab ── */}
       {tab === 'pages' && <PagesTab />}
-
       {/* ── Media tab ── */}
       {tab === 'media' && <MediaUploader />}
       {/* ── Settings tab ── */}
@@ -307,9 +324,21 @@ function MediaUploader() {
   const [error, setError] = useState('');
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [configState, setConfigState] = useState<'loading' | 'configured' | 'not-configured'>('loading');
+  const [cdnLabel, setCdnLabel] = useState('');
 
-  const configured = isStorageConfigured();
-  const cfg = getBunnyConfig();
+  useEffect(() => {
+    (async () => {
+      const configured = await isStorageConfigured();
+      if (configured) {
+        const cfg = await getBunnyConfig();
+        setCdnLabel(cfg.cdnUrl || cfg.storageZone);
+        setConfigState('configured');
+      } else {
+        setConfigState('not-configured');
+      }
+    })();
+  }, []);
 
   const copyToClipboard = (text: string, idx: number) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -353,7 +382,15 @@ function MediaUploader() {
     await processFiles(files);
   };
 
-  if (!configured) {
+  if (configState === 'loading') {
+    return (
+      <div className="border rule p-8 text-center">
+        <p className="text-sm text-muted">Loading…</p>
+      </div>
+    );
+  }
+
+  if (configState === 'not-configured') {
     return (
       <div className="border rule p-8 text-center">
         <p className="font-semibold mb-2">Bunny Storage not configured</p>
@@ -367,7 +404,7 @@ function MediaUploader() {
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <p className="text-sm text-muted">
-        Images upload to Bunny Storage (<code>{cfg.cdnUrl || cfg.storageZone}</code>). Copy the CDN URL after upload to paste into your posts.
+        Images upload to Bunny Storage (<code>{cdnLabel}</code>). Copy the CDN URL after upload to paste into your posts.
       </p>
 
       {/* Drop zone */}
@@ -498,15 +535,25 @@ function SettingsTab({
 }
 
 function SiteSettingsForm() {
-  const [tagline, setTagline] = useState(getSiteSettings().tagline);
+  const [tagline, setTagline] = useState('We travel the spaceways from planet to planet.');
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    getSiteSettings().then((s) => {
+      setTagline(s.tagline);
+      setLoading(false);
+    });
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSiteSettings({ tagline });
+    await setSiteSettings({ tagline });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
+
+  if (loading) return <p className="text-sm text-muted">Loading settings…</p>;
 
   return (
     <div>
@@ -534,23 +581,30 @@ function SiteSettingsForm() {
 }
 
 function BunnySettingsForm() {
-  const [cfg, setCfg] = useState<BunnyConfig>(getBunnyConfig());
+  const [cfg, setCfg] = useState<BunnyConfig | null>(null);
   const [saved, setSaved] = useState(false);
 
-  const update = (k: keyof BunnyConfig, v: string) => setCfg((prev) => ({ ...prev, [k]: v }));
+  useEffect(() => {
+    getBunnyConfig().then(setCfg);
+  }, []);
 
-  const handleSave = (e: React.FormEvent) => {
+  const update = (k: keyof BunnyConfig, v: string) => setCfg((prev) => prev ? ({ ...prev, [k]: v }) : prev);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setBunnyConfig(cfg);
+    if (!cfg) return;
+    await setBunnyConfig(cfg);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
+
+  if (!cfg) return <p className="text-sm text-muted">Loading Bunny settings…</p>;
 
   return (
     <div>
       <h2 className="text-base font-semibold mb-1">Bunny.net</h2>
       <p className="text-sm text-muted mb-5">
-        Credentials are stored in this browser only and sent only to Bunny's APIs when uploading.
+        Credentials are stored securely in the database and sent only to Bunny's APIs when uploading.
       </p>
 
       <form onSubmit={handleSave} className="flex flex-col gap-6">
@@ -567,7 +621,6 @@ function BunnySettingsForm() {
                 className="field"
                 placeholder="myblog"
               />
-
             </div>
             <div>
               <label className="text-xs text-muted block mb-1">Storage API key</label>
@@ -579,7 +632,6 @@ function BunnySettingsForm() {
                 placeholder="••••••••"
                 autoComplete="new-password"
               />
-
             </div>
             <div>
               <label className="text-xs text-muted block mb-1">Pull zone CDN URL</label>
@@ -590,7 +642,6 @@ function BunnySettingsForm() {
                 className="field"
                 placeholder="https://myblog.b-cdn.net"
               />
-
             </div>
             <div>
               <label className="text-xs text-muted block mb-1">Storage region endpoint</label>
@@ -601,10 +652,8 @@ function BunnySettingsForm() {
                 className="field"
                 placeholder="storage.bunnycdn.com"
               />
-
             </div>
           </div>
-
         </div>
 
         {/* Stream */}
@@ -620,7 +669,6 @@ function BunnySettingsForm() {
                 className="field"
                 placeholder="123456"
               />
-
             </div>
             <div>
               <label className="text-xs text-muted block mb-1">Stream API key</label>
@@ -632,7 +680,6 @@ function BunnySettingsForm() {
                 placeholder="••••••••"
                 autoComplete="new-password"
               />
-
             </div>
           </div>
         </div>
@@ -664,9 +711,13 @@ function SecuritySection({
     if (next !== confirmPw) { setMsg('New passwords do not match.'); return; }
     const strength = checkPasswordStrength(next);
     if (!strength.strong) { setMsg(strength.message); return; }
-    const result = await changePassword(current, next);
-    setMsg(result.message);
-    if (result.success) { setCurrent(''); setNext(''); setConfirmPw(''); }
+    try {
+      const result = await changePassword(current, next);
+      setMsg(result.message);
+      if (result.success) { setCurrent(''); setNext(''); setConfirmPw(''); }
+    } catch {
+      setMsg('Could not change password. Please try again.');
+    }
   };
 
   return (
@@ -727,6 +778,7 @@ function PagesTab() {
   const [editing, setEditing] = useState<Page | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
 
   const refresh = () => setPages(getAllPages());
   const flash = (msg: string) => { setMessage(msg); setTimeout(() => setMessage(''), 3500); };
@@ -736,40 +788,50 @@ function PagesTab() {
     setEditing({ slug: '', title: '', content: '' });
   };
 
-  const handleSave = (page: Page) => {
+  const handleSave = async (page: Page) => {
+    setBusy(true);
     if (isNew) {
-      if (!createPage(page)) {
+      const ok = await createPage(page);
+      if (!ok) {
         alert(`A page with slug "${page.slug}" already exists. Change the slug and try again.`);
+        setBusy(false);
         return;
       }
     } else {
-      updatePage(page.slug, page);
+      await updatePage(page.slug, page);
     }
     refresh();
     setEditing(null);
     setIsNew(false);
     flash(isNew ? 'Page created.' : 'Page saved.');
+    setBusy(false);
   };
 
-  const handleSaveAndView = (page: Page) => {
+  const handleSaveAndView = async (page: Page) => {
+    setBusy(true);
     if (isNew) {
-      if (!createPage(page)) {
+      const ok = await createPage(page);
+      if (!ok) {
         alert(`A page with slug "${page.slug}" already exists. Change the slug and try again.`);
+        setBusy(false);
         return;
       }
     } else {
-      updatePage(page.slug, page);
+      await updatePage(page.slug, page);
     }
     refresh();
     setEditing(null);
     setIsNew(false);
     window.open(`/page/${page.slug}`, '_blank', 'noopener');
+    setBusy(false);
   };
 
-  const handleDelete = (slug: string) => {
+  const handleDelete = async (slug: string) => {
     if (confirm('Delete this page? This cannot be undone.')) {
-      deletePage(slug);
+      setBusy(true);
+      await deletePage(slug);
       refresh();
+      setBusy(false);
     }
   };
 
@@ -781,6 +843,7 @@ function PagesTab() {
         onSave={handleSave}
         onSaveAndView={handleSaveAndView}
         onCancel={() => { setEditing(null); setIsNew(false); }}
+        busy={busy}
       />
     );
   }
@@ -837,6 +900,7 @@ function PagesTab() {
                       </button>
                       <button
                         onClick={() => handleDelete(page.slug)}
+                        disabled={busy}
                         className="btn"
                         style={{ padding: '3px 9px', fontSize: 12 }}
                       >
@@ -862,12 +926,14 @@ function PageEditor({
   onSave,
   onSaveAndView,
   onCancel,
+  busy,
 }: {
   page: Page;
   isNew: boolean;
   onSave: (p: Page) => void;
   onSaveAndView: (p: Page) => void;
   onCancel: () => void;
+  busy: boolean;
 }) {
   const [draft, setDraft] = useState<Page>({ ...page });
   const [tab, setTab] = useState<'content' | 'social'>('content');
@@ -880,12 +946,12 @@ function PageEditor({
       <header className="border-b rule pb-4 mb-6 flex items-center justify-between flex-wrap gap-4">
         <h1 className="text-xl font-semibold">{isNew ? 'New Page' : `Edit: ${page.title}`}</h1>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={onCancel} className="btn">Cancel</button>
-          <button onClick={() => onSave(draft)} className="btn btn-primary">
-            {isNew ? 'Create' : 'Save'}
+          <button onClick={onCancel} className="btn" disabled={busy}>Cancel</button>
+          <button onClick={() => onSave(draft)} className="btn btn-primary" disabled={busy}>
+            {busy ? 'Saving…' : isNew ? 'Create' : 'Save'}
           </button>
-          <button onClick={() => onSaveAndView(draft)} className="btn btn-primary">
-            {isNew ? 'Create & View' : 'Save & View'}
+          <button onClick={() => onSaveAndView(draft)} className="btn btn-primary" disabled={busy}>
+            {busy ? 'Saving…' : isNew ? 'Create & View' : 'Save & View'}
           </button>
         </div>
       </header>
@@ -1026,12 +1092,14 @@ function PostEditor({
   onSave,
   onSaveAndView,
   onCancel,
+  busy,
 }: {
   post: Post;
   isNew: boolean;
   onSave: (p: Post) => void;
   onSaveAndView: (p: Post) => void;
   onCancel: () => void;
+  busy: boolean;
 }) {
   const [draft, setDraft] = useState<Post>({ ...post });
   const [tab, setTab] = useState<'content' | 'social' | 'media'>('content');
@@ -1044,12 +1112,12 @@ function PostEditor({
       <header className="border-b rule pb-4 mb-6 flex items-center justify-between flex-wrap gap-4">
         <h1 className="text-xl font-semibold">{isNew ? 'New Post' : `Edit: ${post.title}`}</h1>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={onCancel} className="btn">Cancel</button>
-          <button onClick={() => onSave(draft)} className="btn btn-primary">
-            {isNew ? 'Create' : 'Save'}
+          <button onClick={onCancel} className="btn" disabled={busy}>Cancel</button>
+          <button onClick={() => onSave(draft)} className="btn btn-primary" disabled={busy}>
+            {busy ? 'Saving…' : isNew ? 'Create' : 'Save'}
           </button>
-          <button onClick={() => onSaveAndView(draft)} className="btn btn-primary">
-            {isNew ? 'Create & View' : 'Save & View'}
+          <button onClick={() => onSaveAndView(draft)} className="btn btn-primary" disabled={busy}>
+            {busy ? 'Saving…' : isNew ? 'Create & View' : 'Save & View'}
           </button>
         </div>
       </header>

@@ -1,4 +1,5 @@
-const SETTINGS_KEY = 'bbl_site_settings';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export interface SiteSettings {
   tagline: string;
@@ -8,15 +9,23 @@ const DEFAULTS: SiteSettings = {
   tagline: 'We travel the spaceways from planet to planet.',
 };
 
-export function getSiteSettings(): SiteSettings {
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
-    return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : { ...DEFAULTS };
-  } catch {
-    return { ...DEFAULTS };
-  }
+export async function getSiteSettings(): Promise<SiteSettings> {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/site_settings?id=eq.1&select=tagline`, {
+    headers: {
+      apikey: ANON_KEY,
+      Authorization: `Bearer ${ANON_KEY}`,
+    },
+  });
+  if (!res.ok) return { ...DEFAULTS };
+  const data = await res.json();
+  if (data.length === 0) return { ...DEFAULTS };
+  return { tagline: data[0].tagline ?? DEFAULTS.tagline };
 }
 
-export function setSiteSettings(settings: SiteSettings): void {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+export async function setSiteSettings(settings: SiteSettings): Promise<void> {
+  await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+    body: JSON.stringify({ action: 'setSiteSettings', tagline: settings.tagline }),
+  });
 }

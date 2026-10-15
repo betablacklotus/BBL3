@@ -1,13 +1,14 @@
 import { getBunnyConfig, isStorageConfigured } from './bunnyConfig';
 
 export async function uploadImage(file: File): Promise<string> {
-  if (!isStorageConfigured()) {
+  const configured = await isStorageConfigured();
+  if (!configured) {
     throw new Error(
       'Bunny Storage is not configured. Go to Admin → Settings to enter your Bunny credentials.'
     );
   }
 
-  const { storageZone, storageKey, cdnUrl, storageHostname } = getBunnyConfig();
+  const { storageZone, storageKey, cdnUrl, storageHostname } = await getBunnyConfig();
 
   const fileData = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();

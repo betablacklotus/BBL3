@@ -1,63 +1,10 @@
 import type { Page } from './types';
 
-const STORAGE_KEY = 'terminal_blog_pages_v1';
-
-function loadPages(): Page[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored) as Page[];
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch {
-    // fall through
-  }
-  return [];
-}
-
-function savePages(pages: Page[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(pages));
-  } catch {
-    // storage full; non-fatal
-  }
-}
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 let _pages: Page[] | null = null;
-
-export function getAllPages(): Page[] {
-  if (!_pages) _pages = loadPages();
-  return [..._pages].sort((a, b) => a.title.localeCompare(b.title));
-}
-
-export function getPage(slug: string): Page | undefined {
-  return getAllPages().find((p) => p.slug === slug);
-}
-
-export function createPage(page: Page): boolean {
-  const pages = getAllPages();
-  if (pages.some((p) => p.slug === page.slug)) return false;
-  pages.push(page);
-  _pages = pages;
-  savePages(pages);
-  return true;
-}
-
-export function updatePage(slug: string, updates: Partial<Page>): boolean {
-  if (!_pages) _pages = loadPages();
-  const idx = _pages.findIndex((p) => p.slug === slug);
-  if (idx === -1) return false;
-  _pages[idx] = { ..._pages[idx], ...updates };
-  savePages(_pages);
-  return true;
-}
-
-export function deletePage(slug: string): boolean {
-  const pages = getAllPages().filter((p) => p.slug !== slug);
-  _pages = pages;
-  savePages(pages);
-  return true;
-}
+let _loading: Promise<void> | null = null;
 
 const BUILTIN_PAGES: Page[] = [
   {
@@ -97,11 +44,112 @@ Write to me at you@example.com.`,
   },
 ];
 
-export function seedBuiltinPages(): void {
+function dbRowToPage(row: Record<string, unknown>): Page {
+  return {
+    slug: row.slug as string,
+    title: row.title as string,
+    content: row.content as string,
+    excerpt: row.excerpt as string | undefined,
+    featuredImage: row.featured_image as string | undefined,
+    socialTitle: row.social_title as string | undefined,
+    socialDescription: row.social_description as string | undefined,
+    socialImage: row.social_image as string | undefined,
+    showInHeader: row.show_in_header as boolean,
+    showInFooter: row.show_in_footer as boolean,
+  };
+}
+
+function pageToDbRow(page: Page): Record<string, unknown> {
+  return {
+    slug: page.slug,
+    title: page.title,
+    content: page.content ?? '',
+    excerpt: page.excerpt ?? null,
+    featured_image: page.featuredImage ?? null,
+    social_title: page.socialTitle ?? null,
+    social_description: page.socialDescription ?? null,
+    social_image: page.socialImage ?? null,
+    show_in_header: page.showInHeader ?? false,
+    show_in_footer: page.showInFooter ?? false,
+  };
+}
+
+export async function loadPages(): Promise<void> {
+  if (_loading) return _loading;
+  _loading = (async () => {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/pages?order=title.asc&select=*`,
+        { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } }
+      );
+      if (!res.ok) throw new Error(`Failed: ${res.status}`);
+      const rows = await res.json() as Record<string, unknown>[];
+      _pages = rows.map(dbRowToPage);
+      await seedBuiltinPages();
+    } catch {
+      _pages = [];
+    }
+  })();
+  return _loading;
+}
+
+export function getAllPages(): Page[] {
+  return _pages ? [..._pages].sort((a, b) => a.title.localeCompare(b.title)) : [];
+}
+
+export function getPage(slug: string): Page | undefined {
+  return getAllPages().find((p) => p.slug === slug);
+}
+
+async function adminAction(action: string, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+    body: JSON.stringify({ action, ...payload }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Request failed' }));
+    throw new Error(body.error || `Request failed (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function createPage(page: Page): Promise<boolean> {
+  if (getAllPages().some((p) => p.slug === page.slug)) return false;
+  await adminAction('upsertPage', { page: pageToDbRow(page) });
+  await loadPages();
+  return true;
+}
+
+export async function updatePage(slug: string, updates: Partial<Page>): Promise<boolean> {
+  if (!_pages) return false;
+  const idx = _pages.findIndex((p) => p.slug === slug);
+  if (idx === -1) return false;
+  const merged = { ..._pages[idx], ...updates };
+  await adminAction('upsertPage', { page: pageToDbRow(merged) });
+  await loadPages();
+  return true;
+}
+
+export async function deletePage(slug: string): Promise<boolean> {
+  await adminAction('deletePage', { slug });
+  await loadPages();
+  return true;
+}
+
+export async function seedBuiltinPages(): Promise<void> {
   const existing = getAllPages().map((p) => p.slug);
   for (const page of BUILTIN_PAGES) {
     if (!existing.includes(page.slug)) {
-      createPage(page);
+      await adminAction('upsertPage', { page: pageToDbRow(page) });
+    }
+  }
+  if (_pages) {
+    const existingSlugs = _pages.map((p) => p.slug);
+    for (const page of BUILTIN_PAGES) {
+      if (!existingSlugs.includes(page.slug)) {
+        _pages.push(page);
+      }
     }
   }
 }

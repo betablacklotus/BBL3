@@ -16,11 +16,9 @@ export function StandalonePage({ slug }: StandalonePageProps) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   useMeta({
-    title: page?.title ?? 'Page not found',
-    description: page?.excerpt ?? '',
-    ogTitle: page?.socialTitle,
-    ogDescription: page?.socialDescription,
-    ogImage: page?.socialImage ?? page?.featuredImage,
+    title: page?.socialTitle ?? page?.title ?? 'Page not found',
+    description: page?.socialDescription ?? page?.excerpt ?? '',
+    image: page?.socialImage ?? page?.featuredImage,
   });
 
   const html = useMemo(() => (page ? renderMarkdown(page.content) : ''), [page]);

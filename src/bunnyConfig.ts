@@ -1,4 +1,5 @@
-const CFG_KEY = 'bbl_bunny';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export interface BunnyConfig {
   storageZone: string;
@@ -18,25 +19,36 @@ const DEFAULTS: BunnyConfig = {
   streamApiKey: '',
 };
 
-export function getBunnyConfig(): BunnyConfig {
-  try {
-    const raw = localStorage.getItem(CFG_KEY);
-    return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : { ...DEFAULTS };
-  } catch {
-    return { ...DEFAULTS };
-  }
+let _cache: BunnyConfig | null = null;
+
+export async function getBunnyConfig(): Promise<BunnyConfig> {
+  if (_cache) return _cache;
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+    body: JSON.stringify({ action: 'getBunnyConfig' }),
+  });
+  if (!res.ok) return { ...DEFAULTS };
+  const data: Record<string, unknown> = await res.json();
+  _cache = { ...DEFAULTS, ...data };
+  return _cache;
 }
 
-export function setBunnyConfig(cfg: BunnyConfig): void {
-  localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+export async function setBunnyConfig(cfg: BunnyConfig): Promise<void> {
+  await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+    body: JSON.stringify({ action: 'setBunnyConfig', config: cfg }),
+  });
+  _cache = cfg;
 }
 
-export function isStorageConfigured(): boolean {
-  const c = getBunnyConfig();
+export async function isStorageConfigured(): Promise<boolean> {
+  const c = await getBunnyConfig();
   return !!(c.storageZone && c.storageKey && c.cdnUrl);
 }
 
-export function isStreamConfigured(): boolean {
-  const c = getBunnyConfig();
+export async function isStreamConfigured(): Promise<boolean> {
+  const c = await getBunnyConfig();
   return !!(c.streamLibraryId && c.streamApiKey);
 }

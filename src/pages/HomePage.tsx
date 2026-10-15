@@ -16,21 +16,24 @@ export function HomePage() {
   const allPosts = getAllPosts();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loading, setLoading] = useState(false);
+  const [tagline, setTagline] = useState('We travel the spaceways from planet to planet.');
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    getSiteSettings().then((s) => setTagline(s.tagline));
+  }, []);
 
   const hasMore = visibleCount < allPosts.length;
 
   const loadMore = useCallback(() => {
     if (loading || !hasMore) return;
     setLoading(true);
-    // small delay so the loading state is visible
     setTimeout(() => {
       setVisibleCount((c) => Math.min(c + PAGE_SIZE, allPosts.length));
       setLoading(false);
     }, 150);
   }, [loading, hasMore, allPosts.length]);
 
-  // Infinite scroll via IntersectionObserver
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel || !hasMore) return;
@@ -55,7 +58,7 @@ export function HomePage() {
       <div className="pt-10 pb-6 border-b rule">
         <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Beta Black Lotus</h1>
         <p className="text-sm sm:text-base text-muted">
-          "{getSiteSettings().tagline}"
+          "{tagline}"
         </p>
       </div>
 
