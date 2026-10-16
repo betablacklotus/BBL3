@@ -198,6 +198,10 @@
     pointer-events: none;
   }
 
+  .media-protect img.cover-lightbox {
+    pointer-events: auto;
+  }
+
   /* iframes (video/audio players) inside media-protect must stay interactive */
   .media-protect iframe {
     pointer-events: auto;

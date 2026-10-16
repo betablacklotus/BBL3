@@ -158,7 +158,7 @@ export function PostPage({ slug }: PostPageProps) {
               ref={coverImageRef}
               src={post.featuredImage}
               alt={post.title}
-              className="w-full h-auto border rule"
+              className="cover-lightbox w-full h-auto border rule"
             />
           )}
         </MediaProtect>
