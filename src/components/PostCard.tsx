@@ -1,4 +1,5 @@
 import { MediaProtect } from './MediaProtect';
+import { FeedVideoPlayer } from './FeedVideoPlayer';
 import { formatDate, getExcerpt, getBandcampTrackId, getBunnyVideo } from '../postStore';
 import { navigate } from '../router';
 import type { Post } from '../types';
@@ -69,20 +70,14 @@ export function PostCard({ post, showPinBadge = true }: PostCardProps) {
         </div>
       ) : post.featuredImage ? (
         <MediaProtect className="mb-4">
-          <a
-            href={`/${post.slug}`}
-            onClick={(e) => { e.preventDefault(); go(); }}
-            style={{ display: 'block', cursor: 'pointer' }}
-          >
-            {isVideoUrl(post.featuredImage) ? (
-              <video
-                src={post.featuredImage}
-                preload="metadata"
-                muted
-                className="w-full h-auto border rule"
-                style={{ maxHeight: 360, objectFit: 'cover', display: 'block' }}
-              />
-            ) : (
+          {isVideoUrl(post.featuredImage) ? (
+            <FeedVideoPlayer src={post.featuredImage} title={post.title} />
+          ) : (
+            <a
+              href={`/${post.slug}`}
+              onClick={(e) => { e.preventDefault(); go(); }}
+              style={{ display: 'block', cursor: 'pointer' }}
+            >
               <img
                 src={post.featuredImage}
                 alt={post.title}
@@ -90,8 +85,8 @@ export function PostCard({ post, showPinBadge = true }: PostCardProps) {
                 className="w-full h-auto border rule"
                 style={{ maxHeight: 360, objectFit: 'cover', display: 'block' }}
               />
-            )}
-          </a>
+            </a>
+          )}
         </MediaProtect>
       ) : null}
 
