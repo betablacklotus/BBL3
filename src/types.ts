@@ -5,6 +5,7 @@ export interface Post {
   excerpt: string;
   content: string; // markdown body
   pinned?: boolean;
+  published?: boolean;
   tags?: string[];
   featuredImage?: string;
   socialTitle?: string;

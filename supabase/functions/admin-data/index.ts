@@ -161,6 +161,7 @@ interface PostRow {
   excerpt: string;
   content: string;
   pinned: boolean;
+  published: boolean;
   tags: string[];
   featured_image?: string;
   social_title?: string;
@@ -323,6 +324,7 @@ Deno.serve(async (req: Request) => {
         excerpt: post.excerpt ?? "",
         content: post.content ?? "",
         pinned: post.pinned ?? false,
+        published: post.published ?? true,
         tags: post.tags ?? [],
         featured_image: post.featured_image ?? null,
         social_title: post.social_title ?? null,
@@ -412,6 +414,7 @@ function rowToPost(r: PostRow): Record<string, unknown> {
     excerpt: r.excerpt,
     content: r.content,
     pinned: r.pinned,
+    published: r.published,
     tags: r.tags ?? [],
     featuredImage: r.featured_image ?? undefined,
     socialTitle: r.social_title ?? undefined,

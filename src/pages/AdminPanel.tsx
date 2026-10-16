@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BookOpen, Image as ImageIcon, Settings, Upload, Copy, Check, FilePlus, FileDown, FileText } from 'lucide-react';
-import { getAllPosts, pinPost, unpinPost, deletePost, updatePost, resetPosts, createPost, getPost, formatDate, loadPosts } from '../postStore';
+import { getAdminPosts, pinPost, unpinPost, deletePost, updatePost, resetPosts, createPost, getPostAdmin, formatDate, loadPosts, togglePublished } from '../postStore';
 import { getAllPages, createPage, updatePage, deletePage } from '../pageStore';
 import { changePassword } from '../adminAuth';
 import { checkPasswordStrength } from '../security';
@@ -21,13 +21,13 @@ interface AdminPanelProps {
 export function AdminPanel({ onLogout }: AdminPanelProps) {
   useMeta({ title: 'Admin Panel', description: 'Manage posts.' });
 
-  const [posts, setPosts] = useState<Post[]>(getAllPosts());
+  const [posts, setPosts] = useState<Post[]>(getAdminPosts());
   const [editing, setEditing] = useState<Post | null>(() => {
     const params = new URLSearchParams(window.location.search);
     const slug = params.get('edit');
     if (slug) {
       history.replaceState(null, '', window.location.pathname);
-      const found = getPost(slug);
+      const found = getPostAdmin(slug);
       if (found) return { ...found };
     }
     return null;
@@ -37,7 +37,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const refresh = () => setPosts(getAllPosts());
+  const refresh = () => setPosts(getAdminPosts());
   const flash = (msg: string) => { setMessage(msg); setTimeout(() => setMessage(''), 3500); };
 
   useEffect(() => { loadPosts().then(refresh); }, []);
@@ -45,6 +45,13 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
   const handlePin = async (slug: string, pin: boolean) => {
     setBusy(true);
     if (pin) await pinPost(slug); else await unpinPost(slug);
+    refresh();
+    setBusy(false);
+  };
+
+  const handleTogglePublished = async (slug: string) => {
+    setBusy(true);
+    await togglePublished(slug);
     refresh();
     setBusy(false);
   };
@@ -232,6 +239,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                   <th className="text-left py-2 px-2 font-semibold">Title</th>
                   <th className="text-left py-2 px-2 font-semibold hidden sm:table-cell">Date</th>
                   <th className="text-center py-2 px-2 font-semibold">Pin</th>
+                  <th className="text-center py-2 px-2 font-semibold">Published</th>
                   <th className="text-left py-2 px-2 font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -259,6 +267,16 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                         disabled={busy}
                         className="cursor-pointer"
                         title="Pin to top of feed"
+                      />
+                    </td>
+                    <td className="py-2.5 px-2 text-center">
+                      <input
+                        type="checkbox"
+                        checked={post.published !== false}
+                        onChange={() => handleTogglePublished(post.slug)}
+                        disabled={busy}
+                        className="cursor-pointer"
+                        title={post.published !== false ? 'Unpublish — hide from site' : 'Publish — show on site'}
                       />
                     </td>
                     <td className="py-2.5 px-2">
@@ -1165,6 +1183,14 @@ function PostEditor({
               onChange={(e) => update('pinned', e.target.checked)}
             />
             Pinned — appears at the top of the feed
+          </label>
+          <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={draft.published !== false}
+              onChange={(e) => update('published', e.target.checked)}
+            />
+            Published — visible to visitors (uncheck to hide without deleting)
           </label>
         </div>
       )}

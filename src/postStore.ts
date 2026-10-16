@@ -16,6 +16,7 @@ function dbRowToPost(row: Record<string, unknown>): Post {
     excerpt: row.excerpt as string,
     content: row.content as string,
     pinned: row.pinned as boolean,
+    published: row.published as boolean | undefined,
     tags: row.tags as string[] ?? [],
     featuredImage: row.featured_image as string | undefined,
     socialTitle: row.social_title as string | undefined,
@@ -37,6 +38,7 @@ function postToDbRow(post: Post): Record<string, unknown> {
     excerpt: post.excerpt ?? '',
     content: post.content ?? '',
     pinned: post.pinned ?? false,
+    published: post.published ?? true,
     tags: post.tags ?? [],
     featured_image: post.featuredImage ?? null,
     social_title: post.socialTitle ?? null,
@@ -80,11 +82,19 @@ export async function loadPosts(): Promise<void> {
 }
 
 export function getAllPosts(): Post[] {
+  return (_posts ? sortPosts([..._posts]) : [...SAMPLE_POSTS]).filter((p) => p.published !== false);
+}
+
+export function getAdminPosts(): Post[] {
   return _posts ? sortPosts([..._posts]) : [...SAMPLE_POSTS];
 }
 
 export function getPost(slug: string): Post | undefined {
   return getAllPosts().find((p) => p.slug === slug);
+}
+
+export function getPostAdmin(slug: string): Post | undefined {
+  return getAdminPosts().find((p) => p.slug === slug);
 }
 
 export function getExcerpt(post: Post): string {
@@ -200,7 +210,7 @@ async function adminAction(action: string, payload: Record<string, unknown>): Pr
 }
 
 export async function updatePost(originalSlug: string, updates: Partial<Post>): Promise<boolean> {
-  const existing = getPost(originalSlug);
+  const existing = getPostAdmin(originalSlug);
   if (!existing) return false;
   const merged = { ...existing, ...updates };
   if (merged.slug !== originalSlug) {
@@ -228,7 +238,7 @@ export async function unpinPost(slug: string): Promise<boolean> {
 }
 
 export async function togglePin(slug: string): Promise<boolean> {
-  const post = getPost(slug);
+  const post = getPostAdmin(slug);
   if (!post) return false;
   return post.pinned ? unpinPost(slug) : pinPost(slug);
 }
@@ -240,9 +250,16 @@ export async function deletePost(slug: string): Promise<boolean> {
 }
 
 export async function createPost(post: Post): Promise<boolean> {
-  if (getPost(post.slug)) return false;
+  if (getPostAdmin(post.slug)) return false;
   await adminAction('upsertPost', { post: postToDbRow(post) });
   await loadPosts();
+  return true;
+}
+
+export async function togglePublished(slug: string): Promise<boolean> {
+  const post = getPostAdmin(slug);
+  if (!post) return false;
+  await updatePost(slug, { published: !post.published });
   return true;
 }
 
