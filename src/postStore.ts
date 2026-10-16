@@ -128,9 +128,13 @@ export function getMusicPosts(): Post[] {
   return getAllPosts().filter(hasBandcamp);
 }
 
+const VIDEO_EXT = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i;
+
 export function hasVideo(post: Post): boolean {
   if (post.bunnyVideoId) return true;
-  return /^:::bunny-video\s+\S+\s+\S+/m.test(post.content);
+  if (/^:::bunny-video\s+\S+\s+\S+/m.test(post.content)) return true;
+  if (post.featuredImage && VIDEO_EXT.test(post.featuredImage)) return true;
+  return /(^|\n)\s*(https?:\/\/\S+\.(mp4|webm|ogg|mov|m4v)(\?\S*)?)\s*($|\n)/i.test(post.content);
 }
 
 export function getVideoPosts(): Post[] {

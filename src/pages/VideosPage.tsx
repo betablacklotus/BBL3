@@ -41,14 +41,25 @@ export function VideosPage() {
 
                 {post.featuredImage && (
                   <MediaProtect className="mb-4 cursor-pointer">
-                    <img
-                      src={post.featuredImage}
-                      alt={post.title}
-                      loading="lazy"
-                      onClick={() => navigate(`/${post.slug}`)}
-                      className="w-full h-auto border rule cursor-pointer"
-                      style={{ maxHeight: 280, objectFit: 'cover' }}
-                    />
+                    {/\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(post.featuredImage) ? (
+                      <video
+                        src={post.featuredImage}
+                        preload="metadata"
+                        muted
+                        onClick={() => navigate(`/${post.slug}`)}
+                        className="w-full h-auto border rule cursor-pointer"
+                        style={{ maxHeight: 280, objectFit: 'cover', display: 'block' }}
+                      />
+                    ) : (
+                      <img
+                        src={post.featuredImage}
+                        alt={post.title}
+                        loading="lazy"
+                        onClick={() => navigate(`/${post.slug}`)}
+                        className="w-full h-auto border rule cursor-pointer"
+                        style={{ maxHeight: 280, objectFit: 'cover' }}
+                      />
+                    )}
                   </MediaProtect>
                 )}
 
