@@ -75,7 +75,7 @@ function pageToDbRow(page: Page): Record<string, unknown> {
 
 export async function loadPages(): Promise<void> {
   if (_loading) return _loading;
-  _loading = (async () => {
+  const p = (async () => {
     try {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/pages?order=title.asc&select=*`,
@@ -87,9 +87,12 @@ export async function loadPages(): Promise<void> {
       await seedBuiltinPages();
     } catch {
       _pages = [];
+    } finally {
+      _loading = null;
     }
   })();
-  return _loading;
+  _loading = p;
+  return p;
 }
 
 export function getAllPages(): Page[] {
