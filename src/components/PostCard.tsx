@@ -3,6 +3,11 @@ import { formatDate, getExcerpt, getBandcampTrackId, getBunnyVideo } from '../po
 import { navigate } from '../router';
 import type { Post } from '../types';
 
+const VIDEO_EXT = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i;
+function isVideoUrl(url: string): boolean {
+  return VIDEO_EXT.test(url);
+}
+
 interface PostCardProps {
   post: Post;
   showPinBadge?: boolean;
@@ -69,13 +74,23 @@ export function PostCard({ post, showPinBadge = true }: PostCardProps) {
             onClick={(e) => { e.preventDefault(); go(); }}
             style={{ display: 'block', cursor: 'pointer' }}
           >
-            <img
-              src={post.featuredImage}
-              alt={post.title}
-              loading="lazy"
-              className="w-full h-auto border rule"
-              style={{ maxHeight: 360, objectFit: 'cover', display: 'block' }}
-            />
+            {isVideoUrl(post.featuredImage) ? (
+              <video
+                src={post.featuredImage}
+                preload="metadata"
+                muted
+                className="w-full h-auto border rule"
+                style={{ maxHeight: 360, objectFit: 'cover', display: 'block' }}
+              />
+            ) : (
+              <img
+                src={post.featuredImage}
+                alt={post.title}
+                loading="lazy"
+                className="w-full h-auto border rule"
+                style={{ maxHeight: 360, objectFit: 'cover', display: 'block' }}
+              />
+            )}
           </a>
         </MediaProtect>
       ) : null}

@@ -250,6 +250,14 @@
   border: 1px solid #999999;
   display: block;
 }
+.prose-mono video,
+.post-video {
+  max-width: 100%;
+  height: auto;
+  margin: 1em 0;
+  border: 1px solid #999999;
+  display: block;
+}
 .prose-mono hr {
   border: none;
   border-top: 1px solid #999999;

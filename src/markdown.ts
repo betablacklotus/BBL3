@@ -3,6 +3,12 @@
 // unordered/ordered lists, blockquotes, hr, galleries, Bunny Stream embeds,
 // Bandcamp embeds (:::bandcamp-track ID), and Bandcamp link cards.
 
+const VIDEO_EXT = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i;
+
+function isVideoUrl(url: string): boolean {
+  return VIDEO_EXT.test(url);
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -14,8 +20,11 @@ function escapeHtml(s: string): string {
 
 function inlineFormat(text: string): string {
   let out = escapeHtml(text);
-  // Images: ![alt](url)
+  // Images and videos: ![alt](url)
   out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, url) => {
+    if (isVideoUrl(url)) {
+      return `<video src="${url}" controls preload="metadata" loading="lazy"></video>`;
+    }
     return `<img src="${url}" alt="${alt}" loading="lazy" />`;
   });
   // Links: [text](url)
@@ -198,9 +207,19 @@ export function renderMarkdown(md: string): string {
       continue;
     }
 
-    // Gallery line: ![alt](url) on its own line — collect consecutive ones
+    // Video line: bare video URL on its own line
+    const videoUrlMatch = line.match(/^(https?:\/\/\S+\.(mp4|webm|ogg|mov|m4v))(\?\S*)?$/i);
+    if (videoUrlMatch) {
+      flushGallery();
+      if (inList) { html.push(inOl ? '</ol>' : '</ul>'); inList = false; }
+      if (inQuote) { html.push('</blockquote>'); inQuote = false; }
+      html.push(`<video src="${videoUrlMatch[1]}" controls preload="metadata" class="post-video"></video>`);
+      continue;
+    }
+
+    // Gallery line: ![alt](url) on its own line — collect consecutive ones (images only)
     const galleryImgMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)\s*$/);
-    if (galleryImgMatch) {
+    if (galleryImgMatch && !isVideoUrl(galleryImgMatch[2])) {
       if (inList) { html.push(inOl ? '</ol>' : '</ul>'); inList = false; }
       if (inQuote) { html.push('</blockquote>'); inQuote = false; }
       galleryBuffer.push(
@@ -292,6 +311,7 @@ export function excerptFromMarkdown(md: string, maxLen = 180): string {
     .replace(/^:::bandcamp-(track|album)\s+\S+$/gm, '')
     .replace(/^:::carousel$|^:::$/gm, '')
     .replace(/^:::bunny-(video|audio).*$/gm, '')
+    .replace(/^https?:\/\/\S+\.(mp4|webm|ogg|mov|m4v)(\?\S*)?$/gim, '')
     .replace(/^#{1,6}\s+/gm, '')
     .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')

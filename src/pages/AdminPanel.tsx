@@ -375,7 +375,7 @@ function MediaUploader() {
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    await processFiles(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')));
+    await processFiles(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/')));
   };
 
   const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -406,7 +406,7 @@ function MediaUploader() {
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <p className="text-sm text-muted">
-        Images upload to Bunny Storage (<code>{cdnLabel}</code>). Copy the CDN URL after upload to paste into your posts.
+        Images and videos upload to Bunny Storage (<code>{cdnLabel}</code>). Copy the CDN URL after upload to paste into your posts.
       </p>
 
       {/* Drop zone */}
@@ -425,13 +425,13 @@ function MediaUploader() {
         ) : (
           <div className="flex flex-col items-center gap-3">
             <Upload size={28} style={{ opacity: 0.25 }} />
-            <p className="text-sm text-muted">Drag images here, or</p>
+            <p className="text-sm text-muted">Drag images or videos here, or</p>
             <label className="btn btn-primary cursor-pointer">
-              Choose images
+              Choose files
               <input
                 type="file"
                 multiple
-                accept="image/*"
+                accept="image/*,video/*"
                 className="sr-only"
                 onChange={handleFileInput}
                 disabled={uploading}
@@ -455,6 +455,11 @@ function MediaUploader() {
           <div className="flex flex-col gap-2">
             {results.map((r, idx) => (
               <div key={idx} className="border rule p-3 flex items-center gap-3">
+                {/\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(r.url) ? (
+                  <video src={r.url} preload="metadata" muted className="w-16 h-16 object-cover border rule flex-shrink-0" />
+                ) : (
+                  <img src={r.url} alt={r.name} loading="lazy" className="w-16 h-16 object-cover border rule flex-shrink-0" />
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted mb-0.5 truncate">{r.name}</p>
                   <code className="text-xs" style={{ wordBreak: 'break-all' }}>{r.url}</code>
@@ -1249,9 +1254,9 @@ function PostEditor({
       {tab === 'media' && (
         <div className="flex flex-col gap-6 max-w-prose">
 
-          {/* Cover image */}
+          {/* Cover image / video */}
           <div>
-            <label className="text-sm block mb-1">Cover image URL</label>
+            <label className="text-sm block mb-1">Cover image or video URL</label>
             <input
               type="url"
               value={draft.featuredImage ?? ''}
@@ -1260,9 +1265,21 @@ function PostEditor({
               placeholder="https://…"
             />
             <p className="text-xs text-muted mt-1">
-              Upload an image first in the <strong>Media</strong> tab, then paste the CDN URL here.
-              Ignored if a Bandcamp or Bunny video embed is set.
+              Upload an image or video in the <strong>Media</strong> tab, then paste the CDN URL here.
+              Video URLs (mp4, webm, etc.) render as an inline player. Ignored if a Bandcamp or Bunny video embed is set.
             </p>
+            {draft.featuredImage && /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(draft.featuredImage) && (
+              <div className="mt-3">
+                <p className="text-xs text-muted mb-2">Preview:</p>
+                <video
+                  src={draft.featuredImage}
+                  controls
+                  preload="metadata"
+                  className="w-full h-auto border rule"
+                  style={{ maxHeight: 300 }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Bandcamp */}

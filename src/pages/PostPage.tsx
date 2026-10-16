@@ -12,6 +12,12 @@ interface PostPageProps {
   slug: string;
 }
 
+const VIDEO_EXT = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i;
+
+function isVideoUrl(url: string): boolean {
+  return VIDEO_EXT.test(url);
+}
+
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -37,10 +43,14 @@ export function PostPage({ slug }: PostPageProps) {
     } else if (bandcampEmbed?.kind === 'album') {
       content = content.replace(/^:::bandcamp-album\s+\S+\s*\n?/m, '');
     }
-    // Strip images in the content that duplicate the featured image
+    // Strip images/videos in the content that duplicate the featured image/video
     if (post.featuredImage) {
       const escaped = escapeRegExp(post.featuredImage);
       content = content.replace(new RegExp('!\\[[^\\]]*\\]\\(' + escaped + '\\)', 'g'), '');
+      // Also strip bare video URLs matching the featured video
+      if (isVideoUrl(post.featuredImage)) {
+        content = content.replace(new RegExp('^' + escaped + '\\s*$', 'gm'), '');
+      }
     }
     return renderMarkdown(content);
   }, [post]);
@@ -107,7 +117,7 @@ export function PostPage({ slug }: PostPageProps) {
         </h1>
       </header>
 
-      {/* Cover: Bunny video > Bandcamp player > featured image */}
+      {/* Cover: Bunny video > Bandcamp player > featured image/video */}
       {bunnyVideo ? (
         <div className="bunny-embed media-protect mb-8">
           <div className="bunny-video-wrap">
@@ -132,11 +142,20 @@ export function PostPage({ slug }: PostPageProps) {
         </div>
       ) : post.featuredImage ? (
         <MediaProtect className="mb-8">
-          <img
-            src={post.featuredImage}
-            alt={post.title}
-            className="w-full h-auto border rule"
-          />
+          {isVideoUrl(post.featuredImage) ? (
+            <video
+              src={post.featuredImage}
+              controls
+              preload="metadata"
+              className="w-full h-auto border rule"
+            />
+          ) : (
+            <img
+              src={post.featuredImage}
+              alt={post.title}
+              className="w-full h-auto border rule"
+            />
+          )}
         </MediaProtect>
       ) : null}
 
@@ -181,7 +200,9 @@ export function PostPage({ slug }: PostPageProps) {
       <EditFab slug={post.slug} />
     </article>
   );
-}function ShareButtons({ url, title, description }: { url: string; title: string; description: string }) {
+}
+
+function ShareButtons({ url, title, description }: { url: string; title: string; description: string }) {
   const encoded = {
     url: encodeURIComponent(url),
     title: encodeURIComponent(title),
