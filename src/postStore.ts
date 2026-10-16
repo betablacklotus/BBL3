@@ -59,7 +59,7 @@ function sortPosts(posts: Post[]): Post[] {
 
 export async function loadPosts(): Promise<void> {
   if (_loading) return _loading;
-  _loading = (async () => {
+  const p = (async () => {
     try {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/posts?order=date.desc&select=*`,
@@ -70,9 +70,12 @@ export async function loadPosts(): Promise<void> {
       _posts = sortPosts(rows.map(dbRowToPost));
     } catch {
       _posts = [...SAMPLE_POSTS];
+    } finally {
+      _loading = null;
     }
   })();
-  return _loading;
+  _loading = p;
+  return p;
 }
 
 export function getAllPosts(): Post[] {

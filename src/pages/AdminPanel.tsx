@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BookOpen, Image as ImageIcon, Settings, Upload, Copy, Check, FilePlus, FileDown, FileText } from 'lucide-react';
-import { getAllPosts, pinPost, unpinPost, deletePost, updatePost, resetPosts, createPost, getPost, formatDate } from '../postStore';
+import { getAllPosts, pinPost, unpinPost, deletePost, updatePost, resetPosts, createPost, getPost, formatDate, loadPosts } from '../postStore';
 import { getAllPages, createPage, updatePage, deletePage } from '../pageStore';
 import { changePassword } from '../adminAuth';
 import { checkPasswordStrength, getBlockedIPs, getRecentFailedAttempts } from '../security';
@@ -39,6 +39,8 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
 
   const refresh = () => setPosts(getAllPosts());
   const flash = (msg: string) => { setMessage(msg); setTimeout(() => setMessage(''), 3500); };
+
+  useEffect(() => { loadPosts().then(refresh); }, []);
 
   const handlePin = async (slug: string, pin: boolean) => {
     setBusy(true);
