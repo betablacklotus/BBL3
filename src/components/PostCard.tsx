@@ -1,4 +1,3 @@
-import { useRef, useEffect } from 'react';
 import { MediaProtect } from './MediaProtect';
 import { FeedVideoPlayer } from './FeedVideoPlayer';
 import { formatDate, getExcerpt, getBandcampEmbed, getBunnyVideo } from '../postStore';
@@ -21,39 +20,6 @@ export function PostCard({ post, showPinBadge = true }: PostCardProps) {
   const bunnyVideo = getBunnyVideo(post);
 
   const go = () => navigate(`/${post.slug}`);
-
-  const bandcampRef = useRef<HTMLDivElement>(null);
-  const bandcampIframeRef = useRef<HTMLIFrameElement>(null);
-  const wasPlayingRef = useRef(false);
-
-  useEffect(() => {
-    if (!bandcampEmbed) return;
-    const container = bandcampRef.current;
-    if (!container) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            if (wasPlayingRef.current && bandcampIframeRef.current && !bandcampIframeRef.current.src) {
-              bandcampIframeRef.current.src = bandcampIframeRef.current.dataset.src || '';
-            }
-          } else {
-            const iframe = bandcampIframeRef.current;
-            if (iframe && iframe.src) {
-              wasPlayingRef.current = true;
-              iframe.dataset.src = iframe.src;
-              iframe.src = '';
-            }
-          }
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, [bandcampEmbed]);
 
   return (
     <article className="post-card py-6 sm:py-8">
@@ -94,9 +60,8 @@ export function PostCard({ post, showPinBadge = true }: PostCardProps) {
           </div>
         </div>
       ) : bandcampEmbed ? (
-        <div className="bandcamp-embed mb-4" ref={bandcampRef}>
+        <div className="bandcamp-embed mb-4">
           <iframe
-            ref={bandcampIframeRef}
             src={`https://bandcamp.com/EmbeddedPlayer/${bandcampEmbed.kind}=${bandcampEmbed.id}/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/transparent=true/`}
             title="Bandcamp player"
             seamless
