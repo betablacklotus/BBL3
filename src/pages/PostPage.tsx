@@ -40,10 +40,10 @@ export function PostPage({ slug }: PostPageProps) {
       content = content.replace(/^:::bunny-video\s+\S+\s+\S+\s*\n?/m, '');
     } else if (bandcampEmbed?.kind === 'track') {
       content = content.replace(/^:::bandcamp-track\s+\S+\s*\n?/m, '');
-      content = content.replace(/<iframe[^>]+src=["']https?:\/\/bandcamp\.com\/EmbeddedPlayer\/track=\d+[^"']*["'][^>]*><\/iframe>\s*(?:<a\s[^>]*href=["']https?:\/\/[^"']+\.bandcamp\.com\/track\/[^"']*["'][^>]*>[^<]*<\/a>)?\s*/gi, '');
+      content = content.replace(/<iframe[^>]+src=["']https?:\/\/bandcamp\.com\/EmbeddedPlayer\/track=\d+[^"']*["'][^>]*>[\s\S]*?<\/iframe>\s*/gi, '');
     } else if (bandcampEmbed?.kind === 'album') {
       content = content.replace(/^:::bandcamp-album\s+\S+\s*\n?/m, '');
-      content = content.replace(/<iframe[^>]+src=["']https?:\/\/bandcamp\.com\/EmbeddedPlayer\/album=\d+[^"']*["'][^>]*><\/iframe>\s*(?:<a\s[^>]*href=["']https?:\/\/[^"']+\.bandcamp\.com\/album\/[^"']*["'][^>]*>[^<]*<\/a>)?\s*/gi, '');
+      content = content.replace(/<iframe[^>]+src=["']https?:\/\/bandcamp\.com\/EmbeddedPlayer\/album=\d+[^"']*["'][^>]*>[\s\S]*?<\/iframe>\s*/gi, '');
     }
     // Strip images/videos in the content that duplicate the featured image/video
     if (post.featuredImage) {
