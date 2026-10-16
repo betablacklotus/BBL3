@@ -12,6 +12,10 @@ interface PostPageProps {
   slug: string;
 }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export function PostPage({ slug }: PostPageProps) {
   const post = getPost(slug);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -32,6 +36,11 @@ export function PostPage({ slug }: PostPageProps) {
       content = content.replace(/^:::bandcamp-track\s+\S+\s*\n?/m, '');
     } else if (bandcampEmbed?.kind === 'album') {
       content = content.replace(/^:::bandcamp-album\s+\S+\s*\n?/m, '');
+    }
+    // Strip images in the content that duplicate the featured image
+    if (post.featuredImage) {
+      const escaped = escapeRegExp(post.featuredImage);
+      content = content.replace(new RegExp('!\\[[^\\]]*\\]\\(' + escaped + '\\)', 'g'), '');
     }
     return renderMarkdown(content);
   }, [post]);
