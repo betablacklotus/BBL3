@@ -19,6 +19,9 @@
 /feed.xml
   Cache-Control: public, max-age=3600
 
+/feed.xsl
+  Cache-Control: public, max-age=3600
+
 # ── Uploaded images — 30 days ────────────────────────────────────────────────
 /images/*
   Cache-Control: public, max-age=2592000

@@ -38,7 +38,7 @@ RewriteRule ^ index.html [QL]
   </FilesMatch>
 
   # Feed
-  <FilesMatch "feed\.xml$">
+  <FilesMatch "feed\.(xml|xsl)$">
     ExpiresDefault "access plus 1 hour"
     Header set Cache-Control "public, max-age=3600"
   </FilesMatch>
