@@ -107,6 +107,28 @@ export function renderMarkdown(md: string): string {
       continue;
     }
 
+    // Bandcamp iframe embed: pasted <iframe src="https://bandcamp.com/EmbeddedPlayer/track=ID/...">
+    const bandcampIframeMatch = line.match(/<iframe[^>]+src=["'](https?:\/\/bandcamp\.com\/EmbeddedPlayer\/(track|album)=(\d+)[^"']*)["'][^>]*>/i);
+    if (bandcampIframeMatch) {
+      flushGallery();
+      if (inList) { html.push(inOl ? '</ol>' : '</ul>'); inList = false; }
+      if (inQuote) { html.push('</blockquote>'); inQuote = false; }
+      const kind = bandcampIframeMatch[2];
+      const id = bandcampIframeMatch[3];
+      // Skip following <a> tag line that Bandcamp includes in embed snippets
+      const nextLine = lines[i + 1];
+      if (nextLine && /<a\s[^>]*href=["']https?:\/\/[^"']+\.bandcamp\.com\/(track|album)\//i.test(nextLine)) {
+        i++;
+      }
+      html.push(
+        `<div class="bandcamp-embed">` +
+        `<iframe src="https://bandcamp.com/EmbeddedPlayer/${kind}=${id}/size=large/bgcol=ffffff/linkcol=0687f5/minimal=true/transparent=true/" ` +
+        `title="Bandcamp player" seamless loading="lazy"></iframe>` +
+        `</div>`
+      );
+      continue;
+    }
+
     // Bandcamp card: bare bandcamp.com track or album URL on its own line
     const bandcampMatch = line.trim().match(/^(https?:\/\/([^.]+)\.bandcamp\.com\/(track|album)\/([^\s/?#]+))\/?$/i);
     if (bandcampMatch) {
@@ -307,6 +329,7 @@ export function renderMarkdown(md: string): string {
 // Extract a plain-text excerpt from markdown (strip syntax)
 export function excerptFromMarkdown(md: string, maxLen = 180): string {
   const plain = md
+    .replace(/<iframe[^>]*>.*?<\/iframe>/gis, '')
     .replace(/^https?:\/\/[^\s]+\.bandcamp\.com\/[^\s]+$/gm, '')
     .replace(/^:::bandcamp-(track|album)\s+\S+$/gm, '')
     .replace(/^:::carousel$|^:::$/gm, '')
