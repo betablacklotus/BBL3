@@ -5,6 +5,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   X-XSS-Protection: 1; mode=block
   Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; media-src 'self' https:; frame-src https://bandcamp.com https://video.bunny.net https://audio.bunny.net; connect-src 'self' https://*.supabase.co; font-src 'self'; object-src 'none'; base-uri 'self'
   Cache-Control: no-cache, must-revalidate
 
 # ── Vite hashed assets — content-addressed, cache 1 year ─────────────────────

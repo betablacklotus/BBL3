@@ -1,7 +1,6 @@
 import { SUPABASE_URL, ANON_KEY } from './supabaseConfig';
 
-const SESSION_KEY = 'terminal_admin_session_v1';
-const SESSION_DURATION = 2 * 60 * 60 * 1000;
+const TOKEN_KEY = 'terminal_admin_token_v1';
 
 function edgeUrl(): string {
   return `${SUPABASE_URL}/functions/v1/admin-data`;
@@ -15,7 +14,38 @@ function edgeHeaders(): Record<string, string> {
   };
 }
 
-export async function login(password: string): Promise<{ success: boolean; message: string }> {
+export function getToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setToken(token: string): void {
+  try {
+    localStorage.setItem(TOKEN_KEY, token);
+  } catch {
+    // non-fatal
+  }
+}
+
+export function clearToken(): void {
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // non-fatal
+  }
+}
+
+export interface LoginResult {
+  success: boolean;
+  message: string;
+  token?: string;
+  mustChangePassword?: boolean;
+}
+
+export async function login(password: string): Promise<LoginResult> {
   const res = await fetch(edgeUrl(), {
     method: 'POST',
     headers: edgeHeaders(),
@@ -25,39 +55,19 @@ export async function login(password: string): Promise<{ success: boolean; messa
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || `Server error (${res.status})`);
   }
-  const data = await res.json();
-  if (data.success) {
-    try {
-      localStorage.setItem(SESSION_KEY, String(Date.now() + SESSION_DURATION));
-    } catch {
-      // non-fatal
-    }
+  const data = await res.json() as LoginResult;
+  if (data.success && data.token) {
+    setToken(data.token);
   }
-  return { success: data.success, message: data.message };
+  return data;
 }
 
 export function isLoggedIn(): boolean {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return false;
-    const until = parseInt(raw, 10);
-    if (isNaN(until)) return false;
-    if (Date.now() > until) {
-      localStorage.removeItem(SESSION_KEY);
-      return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
+  return getToken() !== null;
 }
 
 export function logout(): void {
-  try {
-    localStorage.removeItem(SESSION_KEY);
-  } catch {
-    // non-fatal
-  }
+  clearToken();
 }
 
 export async function changePassword(
@@ -67,7 +77,7 @@ export async function changePassword(
   const res = await fetch(edgeUrl(), {
     method: 'POST',
     headers: edgeHeaders(),
-    body: JSON.stringify({ action: 'changePassword', currentPassword: current, newPassword: next }),
+    body: JSON.stringify({ action: 'changePassword', currentPassword: current, newPassword: next, token: getToken() }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -76,6 +86,13 @@ export async function changePassword(
   return await res.json();
 }
 
-export function isDefaultPassword(): boolean {
-  return true;
+export async function isDefaultPassword(): Promise<boolean> {
+  const res = await fetch(edgeUrl(), {
+    method: 'POST',
+    headers: edgeHeaders(),
+    body: JSON.stringify({ action: 'isDefaultPassword' }),
+  });
+  if (!res.ok) return true;
+  const data = await res.json() as { isDefault: boolean };
+  return data.isDefault;
 }

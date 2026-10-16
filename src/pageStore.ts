@@ -1,6 +1,7 @@
 import type { Page } from './types';
 
 import { SUPABASE_URL, ANON_KEY } from './supabaseConfig';
+import { getToken } from './adminAuth';
 
 let _pages: Page[] | null = null;
 let _loading: Promise<void> | null = null;
@@ -104,10 +105,12 @@ export function getPage(slug: string): Page | undefined {
 }
 
 async function adminAction(action: string, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const token = getToken();
+  if (!token) throw new Error('Not authenticated');
   const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
-    body: JSON.stringify({ action, ...payload }),
+    body: JSON.stringify({ action, token, ...payload }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: 'Request failed' }));

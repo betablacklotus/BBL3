@@ -1,5 +1,6 @@
-import { getBunnyConfig, isStorageConfigured } from './bunnyConfig';
+import { isStorageConfigured } from './bunnyConfig';
 import { SUPABASE_URL, ANON_KEY } from './supabaseConfig';
+import { getToken } from './adminAuth';
 
 export async function uploadImage(file: File): Promise<string> {
   const configured = await isStorageConfigured();
@@ -9,7 +10,8 @@ export async function uploadImage(file: File): Promise<string> {
     );
   }
 
-  const { storageZone, storageKey, cdnUrl, storageHostname } = await getBunnyConfig();
+  const token = getToken();
+  if (!token) throw new Error('Not authenticated');
 
   const fileData = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -29,10 +31,7 @@ export async function uploadImage(file: File): Promise<string> {
       apikey: ANON_KEY,
     },
     body: JSON.stringify({
-      storageZone,
-      storageKey,
-      storageHostname,
-      cdnUrl,
+      token,
       fileName: file.name,
       contentType: file.type || 'application/octet-stream',
       fileData,

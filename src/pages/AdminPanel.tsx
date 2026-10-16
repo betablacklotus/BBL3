@@ -3,7 +3,7 @@ import { BookOpen, Image as ImageIcon, Settings, Upload, Copy, Check, FilePlus, 
 import { getAllPosts, pinPost, unpinPost, deletePost, updatePost, resetPosts, createPost, getPost, formatDate, loadPosts } from '../postStore';
 import { getAllPages, createPage, updatePage, deletePage } from '../pageStore';
 import { changePassword } from '../adminAuth';
-import { checkPasswordStrength, getBlockedIPs, getRecentFailedAttempts } from '../security';
+import { checkPasswordStrength } from '../security';
 import { useMeta } from '../seo';
 import { navigate } from '../router';
 import { downloadRssFeed } from '../rss';
@@ -302,11 +302,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
       {tab === 'media' && <MediaUploader />}
       {/* ── Settings tab ── */}
       {tab === 'settings' && (
-        <SettingsTab
-          onReset={handleReset}
-          blockedIPs={getBlockedIPs()}
-          failedAttempts={getRecentFailedAttempts()}
-        />
+        <SettingsTab onReset={handleReset} />
       )}
     </div>
   );
@@ -500,12 +496,8 @@ function MediaUploader() {
 
 function SettingsTab({
   onReset,
-  blockedIPs,
-  failedAttempts,
 }: {
   onReset: () => void;
-  blockedIPs: ReturnType<typeof getBlockedIPs>;
-  failedAttempts: ReturnType<typeof getRecentFailedAttempts>;
 }) {
   return (
     <div className="flex flex-col gap-10 max-w-2xl">
@@ -516,7 +508,7 @@ function SettingsTab({
       </div>
 
       <div className="border-t rule pt-8">
-        <SecuritySection blockedIPs={blockedIPs} failedAttempts={failedAttempts} />
+        <SecuritySection />
       </div>
 
       <div className="border-t rule pt-8">
@@ -701,13 +693,7 @@ function BunnySettingsForm() {
 
 // ─── Security section ─────────────────────────────────────────────────────────
 
-function SecuritySection({
-  blockedIPs,
-  failedAttempts,
-}: {
-  blockedIPs: ReturnType<typeof getBlockedIPs>;
-  failedAttempts: ReturnType<typeof getRecentFailedAttempts>;
-}) {
+function SecuritySection() {
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
@@ -730,49 +716,16 @@ function SecuritySection({
   return (
     <div>
       <h2 className="text-base font-semibold mb-4">Security</h2>
-      <div className="grid md:grid-cols-2 gap-8">
-        <div>
-          <h3 className="text-sm font-semibold mb-3">Change password</h3>
-          <form onSubmit={handleChange} className="flex flex-col gap-3">
-            <input type="password" placeholder="Current password" value={current} onChange={(e) => setCurrent(e.target.value)} className="field" required />
-            <input type="password" placeholder="New password" value={next} onChange={(e) => setNext(e.target.value)} className="field" required />
-            <input type="password" placeholder="Confirm new password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} className="field" required />
-            {msg && <p className="text-xs text-error">{msg}</p>}
-            <button type="submit" className="btn btn-primary self-start">Change password</button>
-          </form>
-          <p className="text-xs text-muted mt-3">12+ chars with upper, lower, number, and symbol.</p>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-semibold mb-3">Recent failed attempts ({failedAttempts.length})</h3>
-          <div className="max-h-40 overflow-y-auto border rule bg-white">
-            {failedAttempts.length === 0 ? (
-              <p className="p-3 text-xs text-muted">No recent failed attempts.</p>
-            ) : (
-              <ul className="text-xs">
-                {failedAttempts.slice(-10).map((a, i) => (
-                  <li key={i} className="px-3 py-1.5 border-b rule last:border-b-0">
-                    {new Date(a.timestamp).toLocaleString()} — {a.ip}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <h3 className="text-sm font-semibold mt-5 mb-3">Blocked IPs ({blockedIPs.length})</h3>
-          <div className="max-h-40 overflow-y-auto border rule bg-white">
-            {blockedIPs.length === 0 ? (
-              <p className="p-3 text-xs text-muted">No blocked IPs.</p>
-            ) : (
-              <ul className="text-xs">
-                {blockedIPs.map((b) => (
-                  <li key={b.ip} className="px-3 py-1.5 border-b rule last:border-b-0">
-                    {b.ip} — until {new Date(b.blockedUntil).toLocaleString()} ({b.attempts} attempts)
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
+      <div>
+        <h3 className="text-sm font-semibold mb-3">Change password</h3>
+        <form onSubmit={handleChange} className="flex flex-col gap-3 max-w-md">
+          <input type="password" placeholder="Current password" value={current} onChange={(e) => setCurrent(e.target.value)} className="field" required />
+          <input type="password" placeholder="New password" value={next} onChange={(e) => setNext(e.target.value)} className="field" required />
+          <input type="password" placeholder="Confirm new password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} className="field" required />
+          {msg && <p className="text-xs text-error">{msg}</p>}
+          <button type="submit" className="btn btn-primary self-start">Change password</button>
+        </form>
+        <p className="text-xs text-muted mt-3">12+ chars with upper, lower, number, and symbol. Rate limiting is enforced server-side — 5 failed attempts locks the account for 30 minutes.</p>
       </div>
     </div>
   );

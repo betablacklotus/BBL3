@@ -9,6 +9,10 @@ function isVideoUrl(url: string): boolean {
   return VIDEO_EXT.test(url);
 }
 
+function isSafeUrl(url: string): boolean {
+  return /^https:\/\//i.test(url);
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -22,6 +26,7 @@ function inlineFormat(text: string): string {
   let out = escapeHtml(text);
   // Images and videos: ![alt](url)
   out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, url) => {
+    if (!isSafeUrl(url)) return escapeHtml(`![${alt}](${url})`);
     if (isVideoUrl(url)) {
       return `<video src="${url}" controls preload="metadata" loading="lazy"></video>`;
     }
@@ -29,7 +34,7 @@ function inlineFormat(text: string): string {
   });
   // Links: [text](url)
   out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => {
-    const safe = /^https?:\/\//i.test(url) ? url : '#';
+    const safe = isSafeUrl(url) ? url : '#';
     return `<a href="${safe}"${safe.startsWith('http') ? ' rel="noopener"' : ''}>${label}</a>`;
   });
   // Inline code: `code`
@@ -95,6 +100,7 @@ export function renderMarkdown(md: string): string {
         const imgs = carouselBuffer
           .map((l) => l.match(/^!\[([^\]]*)\]\(([^)]+)\)\s*$/))
           .filter(Boolean)
+          .filter((m) => isSafeUrl(m![2]))
           .map((m) => `<img src="${m![2]}" alt="${m![1]}" loading="lazy" />`);
         if (imgs.length > 0) {
           html.push(`<div class="gallery-carousel">${imgs.join('')}</div>`);
@@ -232,6 +238,7 @@ export function renderMarkdown(md: string): string {
     // Video line: bare video URL on its own line
     const videoUrlMatch = line.match(/^(https?:\/\/\S+\.(mp4|webm|ogg|mov|m4v))(\?\S*)?$/i);
     if (videoUrlMatch) {
+      if (!isSafeUrl(videoUrlMatch[1])) continue;
       flushGallery();
       if (inList) { html.push(inOl ? '</ol>' : '</ul>'); inList = false; }
       if (inQuote) { html.push('</blockquote>'); inQuote = false; }
@@ -241,7 +248,7 @@ export function renderMarkdown(md: string): string {
 
     // Gallery line: ![alt](url) on its own line — collect consecutive ones (images only)
     const galleryImgMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)\s*$/);
-    if (galleryImgMatch && !isVideoUrl(galleryImgMatch[2])) {
+    if (galleryImgMatch && !isVideoUrl(galleryImgMatch[2]) && isSafeUrl(galleryImgMatch[2])) {
       if (inList) { html.push(inOl ? '</ol>' : '</ul>'); inList = false; }
       if (inQuote) { html.push('</blockquote>'); inQuote = false; }
       galleryBuffer.push(
@@ -317,6 +324,7 @@ export function renderMarkdown(md: string): string {
     const imgs = carouselBuffer
       .map((l) => l.match(/^!\[([^\]]*)\]\(([^)]+)\)\s*$/))
       .filter(Boolean)
+      .filter((m) => isSafeUrl(m![2]))
       .map((m) => `<img src="${m![2]}" alt="${m![1]}" loading="lazy" />`);
     if (imgs.length > 0) html.push(`<div class="gallery-carousel">${imgs.join('')}</div>`);
   }
