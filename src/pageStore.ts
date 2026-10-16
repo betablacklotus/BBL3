@@ -123,11 +123,14 @@ export async function createPage(page: Page): Promise<boolean> {
   return true;
 }
 
-export async function updatePage(slug: string, updates: Partial<Page>): Promise<boolean> {
+export async function updatePage(originalSlug: string, updates: Partial<Page>): Promise<boolean> {
   if (!_pages) return false;
-  const idx = _pages.findIndex((p) => p.slug === slug);
+  const idx = _pages.findIndex((p) => p.slug === originalSlug);
   if (idx === -1) return false;
   const merged = { ..._pages[idx], ...updates };
+  if (merged.slug !== originalSlug) {
+    await adminAction('deletePage', { slug: originalSlug });
+  }
   await adminAction('upsertPage', { page: pageToDbRow(merged) });
   await loadPages();
   return true;

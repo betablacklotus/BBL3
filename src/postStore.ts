@@ -191,10 +191,13 @@ async function adminAction(action: string, payload: Record<string, unknown>): Pr
   return res.json();
 }
 
-export async function updatePost(slug: string, updates: Partial<Post>): Promise<boolean> {
-  const existing = getPost(slug);
+export async function updatePost(originalSlug: string, updates: Partial<Post>): Promise<boolean> {
+  const existing = getPost(originalSlug);
   if (!existing) return false;
   const merged = { ...existing, ...updates };
+  if (merged.slug !== originalSlug) {
+    await adminAction('deletePost', { slug: originalSlug });
+  }
   await adminAction('upsertPost', { post: postToDbRow(merged) });
   await loadPosts();
   return true;

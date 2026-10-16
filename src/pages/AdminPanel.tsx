@@ -58,7 +58,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
     }
   };
 
-  const handleSave = async (post: Post) => {
+  const handleSave = async (post: Post, originalSlug: string) => {
     setBusy(true);
     if (isNew) {
       const ok = await createPost(post);
@@ -69,7 +69,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
       }
     } else {
       post.pinned ? await pinPost(post.slug) : await unpinPost(post.slug);
-      await updatePost(post.slug, post);
+      await updatePost(originalSlug, post);
     }
     refresh();
     setEditing(null);
@@ -78,7 +78,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
     setBusy(false);
   };
 
-  const handleSaveAndView = async (post: Post) => {
+  const handleSaveAndView = async (post: Post, originalSlug: string) => {
     setBusy(true);
     if (isNew) {
       const ok = await createPost(post);
@@ -89,7 +89,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
       }
     } else {
       post.pinned ? await pinPost(post.slug) : await unpinPost(post.slug);
-      await updatePost(post.slug, post);
+      await updatePost(originalSlug, post);
     }
     refresh();
     setEditing(null);
@@ -795,7 +795,7 @@ function PagesTab() {
     setEditing({ slug: '', title: '', content: '' });
   };
 
-  const handleSave = async (page: Page) => {
+  const handleSave = async (page: Page, originalSlug: string) => {
     setBusy(true);
     if (isNew) {
       const ok = await createPage(page);
@@ -805,7 +805,7 @@ function PagesTab() {
         return;
       }
     } else {
-      await updatePage(page.slug, page);
+      await updatePage(originalSlug, page);
     }
     refresh();
     setEditing(null);
@@ -814,7 +814,7 @@ function PagesTab() {
     setBusy(false);
   };
 
-  const handleSaveAndView = async (page: Page) => {
+  const handleSaveAndView = async (page: Page, originalSlug: string) => {
     setBusy(true);
     if (isNew) {
       const ok = await createPage(page);
@@ -824,7 +824,7 @@ function PagesTab() {
         return;
       }
     } else {
-      await updatePage(page.slug, page);
+      await updatePage(originalSlug, page);
     }
     refresh();
     setEditing(null);
@@ -937,16 +937,20 @@ function PageEditor({
 }: {
   page: Page;
   isNew: boolean;
-  onSave: (p: Page) => void;
-  onSaveAndView: (p: Page) => void;
+  onSave: (p: Page, originalSlug: string) => void;
+  onSaveAndView: (p: Page, originalSlug: string) => void;
   onCancel: () => void;
   busy: boolean;
 }) {
+  const originalSlug = page.slug;
   const [draft, setDraft] = useState<Page>({ ...page });
   const [tab, setTab] = useState<'content' | 'social'>('content');
 
   const update = (field: keyof Page, value: unknown) =>
     setDraft((prev) => ({ ...prev, [field]: value }));
+
+  const updateSlug = (value: string) =>
+    update('slug', value.trim().replace(/\s+/g, '-'));
 
   return (
     <div className="max-w-page mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-20">
@@ -954,10 +958,10 @@ function PageEditor({
         <h1 className="text-xl font-semibold">{isNew ? 'New Page' : `Edit: ${page.title}`}</h1>
         <div className="flex gap-2 flex-wrap">
           <button onClick={onCancel} className="btn" disabled={busy}>Cancel</button>
-          <button onClick={() => onSave(draft)} className="btn btn-primary" disabled={busy}>
+          <button onClick={() => onSave(draft, originalSlug)} className="btn btn-primary" disabled={busy}>
             {busy ? 'Saving…' : isNew ? 'Create' : 'Save'}
           </button>
-          <button onClick={() => onSaveAndView(draft)} className="btn btn-primary" disabled={busy}>
+          <button onClick={() => onSaveAndView(draft, originalSlug)} className="btn btn-primary" disabled={busy}>
             {busy ? 'Saving…' : isNew ? 'Create & View' : 'Save & View'}
           </button>
         </div>
@@ -996,13 +1000,9 @@ function PageEditor({
               <input
                 type="text"
                 value={draft.slug}
-                onChange={(e) => update('slug', e.target.value)}
+                onChange={(e) => updateSlug(e.target.value)}
                 className="field"
-                disabled={!isNew}
               />
-              {!isNew && (
-                <p className="text-xs text-muted mt-1">Slug cannot be changed after creation.</p>
-              )}
             </div>
             <div>
               <label className="text-sm block mb-1">Featured image URL</label>
@@ -1103,16 +1103,20 @@ function PostEditor({
 }: {
   post: Post;
   isNew: boolean;
-  onSave: (p: Post) => void;
-  onSaveAndView: (p: Post) => void;
+  onSave: (p: Post, originalSlug: string) => void;
+  onSaveAndView: (p: Post, originalSlug: string) => void;
   onCancel: () => void;
   busy: boolean;
 }) {
+  const originalSlug = post.slug;
   const [draft, setDraft] = useState<Post>({ ...post });
   const [tab, setTab] = useState<'content' | 'social' | 'media'>('content');
 
   const update = (field: keyof Post, value: unknown) =>
     setDraft((prev) => ({ ...prev, [field]: value }));
+
+  const updateSlug = (value: string) =>
+    update('slug', value.trim().replace(/\s+/g, '-'));
 
   return (
     <div className="max-w-page mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-20">
@@ -1120,10 +1124,10 @@ function PostEditor({
         <h1 className="text-xl font-semibold">{isNew ? 'New Post' : `Edit: ${post.title}`}</h1>
         <div className="flex gap-2 flex-wrap">
           <button onClick={onCancel} className="btn" disabled={busy}>Cancel</button>
-          <button onClick={() => onSave(draft)} className="btn btn-primary" disabled={busy}>
+          <button onClick={() => onSave(draft, originalSlug)} className="btn btn-primary" disabled={busy}>
             {busy ? 'Saving…' : isNew ? 'Create' : 'Save'}
           </button>
-          <button onClick={() => onSaveAndView(draft)} className="btn btn-primary" disabled={busy}>
+          <button onClick={() => onSaveAndView(draft, originalSlug)} className="btn btn-primary" disabled={busy}>
             {busy ? 'Saving…' : isNew ? 'Create & View' : 'Save & View'}
           </button>
         </div>
@@ -1163,7 +1167,7 @@ function PostEditor({
               <input
                 type="text"
                 value={draft.slug}
-                onChange={(e) => update('slug', e.target.value)}
+                onChange={(e) => updateSlug(e.target.value)}
                 className="field"
               />
             </div>
