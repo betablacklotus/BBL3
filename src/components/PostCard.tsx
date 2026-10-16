@@ -1,6 +1,6 @@
 import { MediaProtect } from './MediaProtect';
 import { FeedVideoPlayer } from './FeedVideoPlayer';
-import { formatDate, getExcerpt, getBandcampTrackId, getBunnyVideo } from '../postStore';
+import { formatDate, getExcerpt, getBandcampEmbed, getBunnyVideo } from '../postStore';
 import { navigate } from '../router';
 import type { Post } from '../types';
 
@@ -16,7 +16,7 @@ interface PostCardProps {
 
 export function PostCard({ post, showPinBadge = true }: PostCardProps) {
   const excerpt = getExcerpt(post);
-  const bandcampTrackId = getBandcampTrackId(post);
+  const bandcampEmbed = getBandcampEmbed(post);
   const bunnyVideo = getBunnyVideo(post);
 
   const go = () => navigate(`/${post.slug}`);
@@ -59,10 +59,10 @@ export function PostCard({ post, showPinBadge = true }: PostCardProps) {
             />
           </div>
         </div>
-      ) : bandcampTrackId ? (
+      ) : bandcampEmbed ? (
         <div className="bandcamp-embed mb-4">
           <iframe
-            src={`https://bandcamp.com/EmbeddedPlayer/track=${bandcampTrackId}/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/transparent=true/`}
+            src={`https://bandcamp.com/EmbeddedPlayer/${bandcampEmbed.kind}=${bandcampEmbed.id}/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/transparent=true/`}
             title="Bandcamp player"
             seamless
             loading="lazy"

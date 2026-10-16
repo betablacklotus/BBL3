@@ -93,13 +93,17 @@ export function getExcerpt(post: Post): string {
 export function getBandcampTrackId(post: Post): string | undefined {
   if (post.bandcampTrackId) return post.bandcampTrackId;
   const m = post.content.match(/^:::bandcamp-track\s+(\S+)/m);
-  return m ? m[1] : undefined;
+  if (m) return m[1];
+  const iframeMatch = post.content.match(/<iframe[^>]+src=["']https?:\/\/bandcamp\.com\/EmbeddedPlayer\/track=(\d+)/i);
+  return iframeMatch ? iframeMatch[1] : undefined;
 }
 
 export function getBandcampAlbumId(post: Post): string | undefined {
   if (post.bandcampAlbumId) return post.bandcampAlbumId;
   const m = post.content.match(/^:::bandcamp-album\s+(\S+)/m);
-  return m ? m[1] : undefined;
+  if (m) return m[1];
+  const iframeMatch = post.content.match(/<iframe[^>]+src=["']https?:\/\/bandcamp\.com\/EmbeddedPlayer\/album=(\d+)/i);
+  return iframeMatch ? iframeMatch[1] : undefined;
 }
 
 export function getBandcampEmbed(post: Post): { kind: 'track' | 'album'; id: string } | undefined {
@@ -121,7 +125,8 @@ export function getBunnyVideo(post: Post): { libraryId: string; videoId: string 
 export function hasBandcamp(post: Post): boolean {
   if (post.bandcampTrackId || post.bandcampAlbumId) return true;
   return /^:::bandcamp-(track|album)\s+\S+/m.test(post.content) ||
-    /^https?:\/\/[^.]+\.bandcamp\.com\/(track|album)\/[^\s/?#]+\/?$/m.test(post.content);
+    /^https?:\/\/[^.]+\.bandcamp\.com\/(track|album)\/[^\s/?#]+\/?$/m.test(post.content) ||
+    /<iframe[^>]+src=["']https?:\/\/bandcamp\.com\/EmbeddedPlayer\/(track|album)=\d+/i.test(post.content);
 }
 
 export function getMusicPosts(): Post[] {

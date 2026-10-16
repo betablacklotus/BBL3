@@ -122,7 +122,7 @@ export function renderMarkdown(md: string): string {
       }
       html.push(
         `<div class="bandcamp-embed">` +
-        `<iframe src="https://bandcamp.com/EmbeddedPlayer/${kind}=${id}/size=large/bgcol=ffffff/linkcol=0687f5/minimal=true/transparent=true/" ` +
+        `<iframe src="https://bandcamp.com/EmbeddedPlayer/${kind}=${id}/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/transparent=true/" ` +
         `title="Bandcamp player" seamless loading="lazy"></iframe>` +
         `</div>`
       );
@@ -164,7 +164,7 @@ export function renderMarkdown(md: string): string {
       const trackId = bandcampEmbedMatch[1];
       html.push(
         `<div class="bandcamp-embed">` +
-        `<iframe src="https://bandcamp.com/EmbeddedPlayer/track=${trackId}/size=large/bgcol=ffffff/linkcol=0687f5/minimal=true/transparent=true/" ` +
+        `<iframe src="https://bandcamp.com/EmbeddedPlayer/track=${trackId}/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/transparent=true/" ` +
         `title="Bandcamp player" seamless loading="lazy"></iframe>` +
         `</div>`
       );
@@ -180,7 +180,7 @@ export function renderMarkdown(md: string): string {
       const albumId = bandcampAlbumMatch[1];
       html.push(
         `<div class="bandcamp-embed">` +
-        `<iframe src="https://bandcamp.com/EmbeddedPlayer/album=${albumId}/size=large/bgcol=ffffff/linkcol=0687f5/minimal=true/transparent=true/" ` +
+        `<iframe src="https://bandcamp.com/EmbeddedPlayer/album=${albumId}/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/transparent=true/" ` +
         `title="Bandcamp album player" seamless loading="lazy"></iframe>` +
         `</div>`
       );
