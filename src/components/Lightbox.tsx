@@ -102,7 +102,13 @@ export function Lightbox({ images, index, onClose, onNavigate }: LightboxProps) 
 
 // Hook: attaches click handlers to all <img> elements within a container,
 // collecting their src/alt and opening the lightbox on click.
-export function useLightbox(containerRef: React.RefObject<HTMLElement>) {
+// If a coverImageRef is provided, that image is prepended to the gallery
+// so clicking it opens the lightbox at index 0 and it appears as the
+// first image in the slideshow.
+export function useLightbox(
+  containerRef: React.RefObject<HTMLElement>,
+  coverImageRef?: React.RefObject<HTMLImageElement>,
+) {
   const [lightboxImages, setLightboxImages] = useState<{ src: string; alt: string }[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(-1);
 
@@ -110,15 +116,17 @@ export function useLightbox(containerRef: React.RefObject<HTMLElement>) {
     const el = containerRef.current;
     if (!el) return;
 
-    const imgs = Array.from(el.querySelectorAll('img'));
+    const coverImg = coverImageRef?.current ?? null;
+    const contentImgs = Array.from(el.querySelectorAll('img'));
+    const allImgs = coverImg ? [coverImg, ...contentImgs] : contentImgs;
     const handlers: Array<{ img: HTMLImageElement; handler: (e: Event) => void }> = [];
 
-    imgs.forEach((img, i) => {
+    allImgs.forEach((img, i) => {
       img.style.cursor = 'zoom-in';
       const handler = (e: Event) => {
         e.preventDefault();
         e.stopPropagation();
-        const collected = imgs.map((im) => ({ src: im.src, alt: im.alt }));
+        const collected = allImgs.map((im) => ({ src: im.src, alt: im.alt }));
         setLightboxImages(collected);
         setLightboxIndex(i);
       };
@@ -132,7 +140,7 @@ export function useLightbox(containerRef: React.RefObject<HTMLElement>) {
         img.style.cursor = '';
       });
     };
-  }, [containerRef]);
+  }, [containerRef, coverImageRef]);
 
   const closeLightbox = useCallback(() => setLightboxIndex(-1), []);
   const navigateLightbox = useCallback((i: number) => setLightboxIndex(i), []);

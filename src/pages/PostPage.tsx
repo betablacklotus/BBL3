@@ -25,6 +25,7 @@ function escapeRegExp(s: string): string {
 export function PostPage({ slug }: PostPageProps) {
   const post = getPost(slug);
   const contentRef = useRef<HTMLDivElement>(null);
+  const coverImageRef = useRef<HTMLImageElement>(null);
 
   const meta = post ? postMeta(post) : {};
   useMeta(meta);
@@ -57,7 +58,8 @@ export function PostPage({ slug }: PostPageProps) {
     return renderMarkdown(content);
   }, [post]);
 
-  const { lightboxImages, lightboxIndex, closeLightbox, navigateLightbox } = useLightbox(contentRef);
+  const showCoverLightbox = !!post?.featuredImage && !isVideoUrl(post.featuredImage) && !bunnyVideo && !bandcampEmbed;
+  const { lightboxImages, lightboxIndex, closeLightbox, navigateLightbox } = useLightbox(contentRef, showCoverLightbox ? coverImageRef : undefined);
 
   useEffect(() => {
     const el = contentRef.current;
@@ -153,6 +155,7 @@ export function PostPage({ slug }: PostPageProps) {
             />
           ) : (
             <img
+              ref={coverImageRef}
               src={post.featuredImage}
               alt={post.title}
               className="w-full h-auto border rule"
