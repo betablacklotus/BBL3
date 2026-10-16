@@ -81,7 +81,7 @@ function Footer() {
     <footer className="border-t rule mt-20">
       <div className="max-w-page mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted">
         <div>
-          <strong style={{ color: '#1a1a1a' }}>Beta Black Lotus.</strong>
+          <strong style={{ color: '#1a1a1a' }}>Beta Black Lotus</strong>
         </div>
         <div className="flex gap-4 flex-wrap justify-center">
           <a href="/" style={{ textDecoration: 'none' }} onClick={(e) => { e.preventDefault(); navigate('/'); }}>Home</a>
