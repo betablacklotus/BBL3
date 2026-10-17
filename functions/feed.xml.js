@@ -1,9 +1,18 @@
 const SUPABASE_URL = 'https://ohjnanqwjgqjmnwlknsh.supabase.co/functions/v1/rss-feed';
 
+function wantsHtml(request) {
+  const accept = request.headers.get('Accept') || '';
+  if (accept.includes('text/html')) return true;
+  if (accept.includes('application/rss+xml') || accept.includes('application/xml')) return false;
+  return true;
+}
+
 export async function onRequest(context) {
+  const { request } = context;
   try {
-    const upstream = await fetch(`${SUPABASE_URL}?t=${Date.now()}`, {
-      headers: { 'Accept': 'application/rss+xml' },
+    const format = wantsHtml(request) ? 'html' : 'xml';
+    const upstream = await fetch(`${SUPABASE_URL}?format=${format}&t=${Date.now()}`, {
+      headers: { 'Accept': format === 'html' ? 'text/html' : 'application/rss+xml' },
     });
 
     if (!upstream.ok) {
@@ -13,13 +22,16 @@ export async function onRequest(context) {
       });
     }
 
-    const xml = await upstream.text();
-    return new Response(xml, {
+    const body = await upstream.text();
+    const contentType = format === 'html'
+      ? 'text/html; charset=utf-8'
+      : 'application/rss+xml; charset=utf-8';
+
+    return new Response(body, {
       status: 200,
       headers: {
-        'Content-Type': 'application/rss+xml; charset=utf-8',
+        'Content-Type': contentType,
         'Cache-Control': 'public, max-age=3600',
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; media-src 'self' https:; frame-src https://bandcamp.com https://video.bunny.net https://audio.bunny.net; connect-src 'self' https://*.supabase.co; font-src 'self'; object-src 'none'; base-uri 'self'",
       },
     });
   } catch {
