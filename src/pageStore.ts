@@ -42,6 +42,14 @@ If you use an RSS reader, you can subscribe to the [RSS feed](/feed.xml). That i
 
 Write to me at you@example.com.`,
   },
+  {
+    slug: 'rss',
+    title: 'RSS',
+    showInHeader: false,
+    showInFooter: false,
+    excerpt: 'RSS feed subscription info.',
+    content: `**Stay hip.** Subscribe to our RSS feed. Just copy the URL below and paste it into your favorite feed reader, e.g. NetNewsWire, Feedly, Inoreader, etc. We asked a cop and he said it was okay.`,
+  },
 ];
 
 function dbRowToPage(row: Record<string, unknown>): Page {

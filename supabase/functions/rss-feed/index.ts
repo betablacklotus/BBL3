@@ -67,6 +67,24 @@ function fetchPosts(): Promise<Response> {
   );
 }
 
+function fetchRssPage(): Promise<{ content: string } | null> {
+  return fetch(
+    `${supabaseUrl}/rest/v1/pages?slug=eq.rss&select=content&limit=1`,
+    { headers: restHeaders }
+  )
+    .then((res) => res.ok ? res.json() : [])
+    .then((rows: { content: string }[]) => rows.length > 0 ? rows[0] : null)
+    .catch(() => null);
+}
+
+function renderSimpleMarkdown(md: string): string {
+  let out = escapeHtml(md);
+  out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  out = out.replace(/(^|[^*])\*([^*]+)\*(?!\*)/g, "$1<em>$2</em>");
+  out = out.split("\n\n").map((p) => `<p>${p.replace(/\n/g, "<br />")}</p>`).join("");
+  return out;
+}
+
 function buildXml(rows: PostRow[]): string {
   const items = rows
     .map((post) => {
@@ -104,7 +122,7 @@ ${items}
 </rss>`;
 }
 
-function buildHtml(rows: PostRow[]): string {
+function buildHtml(rows: PostRow[], rssIntro: string): string {
   const items = rows
     .map((post) => {
       const link = `${SITE_URL}/${post.slug}`;
@@ -260,9 +278,8 @@ a:hover { color: #8a1a1a; }
   </div>
   <h1 class="page-title">RSS</h1>
   <div class="feed-info">
-    <strong>This is an RSS feed.</strong>
-    Copy the URL below and paste it into your favorite feed reader (NetNewsWire, Feedly, Inoreader, etc.) to subscribe and get new posts delivered automatically.
-    <br /><br />
+    ${renderSimpleMarkdown(rssIntro)}
+    <br />
     <code class="feed-url">${SITE_URL}/feed.xml</code>
   </div>
   <div class="items">
@@ -294,7 +311,9 @@ Deno.serve(async (req: Request) => {
     const rows: PostRow[] = await res.json();
 
     if (wantsHtml) {
-      const html = buildHtml(rows);
+      const rssPage = await fetchRssPage();
+      const intro = rssPage?.content ?? "**Stay hip.** Subscribe to our RSS feed. Just copy the URL below and paste it into your favorite feed reader, e.g. NetNewsWire, Feedly, Inoreader, etc. We asked a cop and he said it was okay.";
+      const html = buildHtml(rows, intro);
       return new Response(html, {
         status: 200,
         headers: {
