@@ -91,7 +91,7 @@ function Footer() {
           <a href="/videos" style={{ textDecoration: 'none' }} onClick={(e) => { e.preventDefault(); navigate('/videos'); }}>Videos</a>
           <a href="/EPK" style={{ textDecoration: 'none' }} onClick={(e) => { e.preventDefault(); navigate('/EPK'); }}>EPK</a>
           <a href="/contact" style={{ textDecoration: 'none' }} onClick={(e) => { e.preventDefault(); navigate('/contact'); }}>Contact</a>
-          <a href="/feed.xml" style={{ textDecoration: 'none' }}>RSS</a>
+          <a href="/feed.xml" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>RSS</a>
         </div>
         <div>© {new Date().getFullYear()}</div>
       </div>
