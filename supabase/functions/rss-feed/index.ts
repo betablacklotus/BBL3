@@ -44,6 +44,22 @@ interface PostRow {
   featured_image?: string;
 }
 
+const VIDEO_EXT = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i;
+
+function isVideoUrl(url: string): boolean {
+  return VIDEO_EXT.test(url);
+}
+
+function hasBandcamp(content: string): boolean {
+  return /bandcamp\.com\/EmbeddedPlayer\/(track|album)=\d+/i.test(content)
+    || /^:::bandcamp-(track|album)\s+\S+/m.test(content)
+    || /^https?:\/\/[^.]+\.bandcamp\.com\/(track|album)\//m.test(content);
+}
+
+function hasBunnyVideo(content: string): boolean {
+  return /^:::bunny-video\s+\S+\s+\S+/m.test(content);
+}
+
 function fetchPosts(): Promise<Response> {
   return fetch(
     `${supabaseUrl}/rest/v1/posts?published=eq.true&order=date.desc&select=slug,title,date,excerpt,content,featured_image`,
@@ -62,7 +78,8 @@ function buildXml(rows: PostRow[]): string {
       const guid = `terminal-${post.slug}`;
       let media = "";
       if (post.featured_image) {
-        media = `    <media:content url="${escapeXml(post.featured_image)}" medium="image" />\n`;
+        const medium = isVideoUrl(post.featured_image) ? "video" : "image";
+        media = `    <media:content url="${escapeXml(post.featured_image)}" medium="${medium}" />\n`;
       }
       return `    <item>
       <title>${title}</title>
@@ -96,14 +113,22 @@ function buildHtml(rows: PostRow[]): string {
       const title = escapeHtml(post.title);
       const desc = escapeHtml(excerpt);
       let thumb = "";
-      if (post.featured_image) {
+      let mediaPreview = "";
+      if (post.featured_image && !isVideoUrl(post.featured_image)) {
         thumb = `<img class="item-thumb" src="${escapeHtml(post.featured_image)}" alt="${title}" />`;
+      } else if (post.featured_image && isVideoUrl(post.featured_image)) {
+        mediaPreview = `<div class="item-media-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Video</div>`;
+      } else if (hasBandcamp(post.content)) {
+        mediaPreview = `<div class="item-media-badge"><svg width="14" height="14" viewBox="0 0 100 100" fill="currentColor"><path d="M0 66.7L33.3 33.3H100L66.7 66.7z"/></svg> Bandcamp</div>`;
+      } else if (hasBunnyVideo(post.content)) {
+        mediaPreview = `<div class="item-media-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Video</div>`;
       }
       return `<div class="item">
   <div class="item-title"><a href="${escapeHtml(link)}">${title}</a></div>
   <div class="item-date">${escapeHtml(pubDate)}</div>
   <div class="item-desc">${desc}</div>
   ${thumb}
+  ${mediaPreview}
 </div>`;
     })
     .join("\n");
@@ -221,6 +246,19 @@ h1 {
   margin-top: 12px;
   border: 1px solid var(--border);
   display: block;
+}
+.item-media-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  background: var(--paper);
+  padding: 4px 10px;
 }
 @media (max-width: 480px) {
   h1 { font-size: 1.3rem; }
