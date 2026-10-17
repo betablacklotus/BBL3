@@ -1,7 +1,8 @@
 // Client-side RSS feed generator. Produces a valid RSS 2.0 XML string from
-// the current posts. In a static export, the pre-built /feed.xml in public/
-// is served as-is. This generator is useful for regenerating the feed after
-// editing posts in the admin panel — download the result and replace feed.xml.
+// the current posts. The live feed at /feed.xml is served by the rss-feed
+// edge function, which queries the database on each request. This generator
+// is used by the "Download RSS feed" button in the admin settings for a
+// quick local copy.
 
 import { getAllPosts, getExcerpt } from './postStore';
 
