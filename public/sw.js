@@ -1,4 +1,4 @@
-const CACHE = 'bbl-v2';
+const CACHE = 'bbl-v3';
 
 // On install: cache the app shell
 self.addEventListener('install', (e) => {
@@ -35,10 +35,22 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Navigation requests — network-first so fresh HTML is always served
+  // Never intercept the RSS feed or other non-app routes — let them pass through
+  if (url.pathname === '/feed.xml' || url.pathname === '/feed.xsl') {
+    return;
+  }
+
+  // Navigation requests — network-first, fall back to cached app shell only
   if (request.mode === 'navigate') {
     e.respondWith(
       fetch(request)
+        .then((res) => {
+          if (res.ok && res.headers.get('Content-Type')?.includes('text/html')) {
+            const clone = res.clone();
+            caches.open(CACHE).then((cache) => cache.put('/', clone));
+          }
+          return res;
+        })
         .catch(() => caches.match('/'))
         .then((res) => res ?? caches.match('/'))
     );
