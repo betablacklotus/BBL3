@@ -19,6 +19,7 @@ export async function onRequest(context) {
       headers: {
         'Content-Type': 'application/rss+xml; charset=utf-8',
         'Cache-Control': 'public, max-age=3600',
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; media-src 'self' https:; frame-src https://bandcamp.com https://video.bunny.net https://audio.bunny.net; connect-src 'self' https://*.supabase.co; font-src 'self'; object-src 'none'; base-uri 'self'",
       },
     });
   } catch {
