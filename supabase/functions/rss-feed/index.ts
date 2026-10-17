@@ -133,154 +133,143 @@ function buildHtml(rows: PostRow[]): string {
     })
     .join("\n");
 
+  const navLinks = [
+    { label: "Home", path: "/" },
+    { label: "Music", path: "/music" },
+    { label: "Videos", path: "/videos" },
+    { label: "EPK", path: "/EPK" },
+    { label: "Contact", path: "/contact" },
+  ];
+
+  const navHtml = navLinks
+    .map((l) => `<a href="${SITE_URL}${l.path === "/" ? "/" : l.path}" class="nav-link${l.label === "RSS" ? " active" : ""}">${l.label}</a>`)
+    .join("\n          ");
+
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>${escapeHtml(SITE_TITLE)} — RSS Feed</title>
+<title>RSS — ${escapeHtml(SITE_TITLE)}</title>
 <link rel="alternate" type="application/rss+xml" title="${escapeHtml(SITE_TITLE)}" href="${SITE_URL}/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
 <style>
-:root {
-  --bg: #f5f5f0;
-  --paper: #ffffff;
-  --ink: #1a1a1a;
-  --muted: #6b6657;
-  --border: #d9d6ce;
-  --accent: #1a4e8a;
-  --mono: 'IBM Plex Mono', 'Courier New', monospace;
-}
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  font-family: var(--mono);
-  background: var(--bg);
-  color: var(--ink);
-  line-height: 1.6;
-  padding: 0 16px 48px;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  background: #ffffff;
+  color: #1a1a1a;
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-.header {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 48px 0 32px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 32px;
+a { color: #1a4e8a; text-decoration: underline; text-underline-offset: 2px; }
+a:visited { color: #6a3d8f; }
+a:hover { color: #8a1a1a; }
+::selection { background: #1a1a1a; color: #ffffff; }
+
+/* ── Site header ── */
+.site-header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  background: #ffffff; border-bottom: 1px solid #999999; height: 64px;
+  display: flex; align-items: center;
 }
-.badge {
-  display: inline-block;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  border: 1px solid var(--border);
-  padding: 3px 10px;
-  margin-bottom: 16px;
+.site-header-inner {
+  max-width: 720px; margin: 0 auto; width: 100%;
+  padding: 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
-h1 {
-  font-size: 1.6rem;
-  font-weight: 600;
-  margin-bottom: 8px;
+.site-logo {
+  font-weight: 700; font-size: 1rem; letter-spacing: -0.02em;
+  color: #1a1a1a; text-decoration: none; flex-shrink: 0;
 }
-.header p {
-  color: var(--muted);
-  font-size: 14px;
+.site-logo:hover { color: #1a1a1a; }
+.site-nav { display: flex; align-items: center; gap: 20px; }
+.nav-link {
+  color: #1a1a1a; text-decoration: none; font-size: 14px;
+  padding: 4px 0; border-bottom: 1px solid transparent;
+  transition: border-color 0.1s linear;
 }
-.info {
-  background: var(--paper);
-  border: 1px solid var(--border);
-  padding: 16px 20px;
-  margin-bottom: 32px;
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.7;
+.nav-link:hover { border-bottom-color: #1a1a1a; color: #1a1a1a; }
+.nav-link.active { border-bottom-color: #1a1a1a; font-weight: 600; }
+
+@media (max-width: 768px) {
+  .site-nav { display: none; }
 }
-.info strong { color: var(--ink); }
-.info code {
-  background: var(--bg);
-  padding: 1px 6px;
-  font-size: 12px;
-  border: 1px solid var(--border);
+
+/* ── Page content ── */
+.page-content {
+  max-width: 640px; margin: 0 auto;
+  padding: 96px 16px 48px;
 }
-.feed-url {
-  word-break: break-all;
+.breadcrumb { font-size: 12px; color: #6b6657; margin-bottom: 24px; }
+.breadcrumb a { color: #6b6657; text-decoration: none; }
+.breadcrumb a:hover { color: #1a1a1a; }
+.breadcrumb span { margin: 0 4px; }
+.page-title {
+  font-size: 1.5rem; font-weight: 600; line-height: 1.2; margin-bottom: 24px;
 }
-.items {
-  max-width: 640px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+.feed-info {
+  background: #ffffff; border: 1px solid #999999; padding: 16px 20px;
+  margin-bottom: 32px; font-size: 13px; color: #6b6657; line-height: 1.7;
 }
-.item {
-  border-bottom: 1px solid var(--border);
-  padding: 20px 0;
+.feed-info strong { color: #1a1a1a; }
+.feed-info code {
+  background: #f0f0f0; padding: 1px 6px; font-size: 12px; border: 1px solid #999999;
 }
+.feed-url { word-break: break-all; }
+
+/* ── Feed items ── */
+.items { display: flex; flex-direction: column; }
+.item { border-bottom: 1px solid #999999; padding: 20px 0; }
 .item:first-child { padding-top: 0; }
 .item:last-child { border-bottom: none; }
-.item-title {
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-.item-title a {
-  color: var(--ink);
-  text-decoration: none;
-}
-.item-title a:hover {
-  color: var(--accent);
-  text-decoration: underline;
-}
-.item-date {
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 8px;
-}
-.item-desc {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.6;
-}
+.item-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.item-title a { color: #1a1a1a; text-decoration: none; }
+.item-title a:hover { color: #1a4e8a; text-decoration: underline; }
+.item-date { font-size: 12px; color: #6b6657; margin-bottom: 8px; }
+.item-desc { font-size: 13px; color: #6b6657; line-height: 1.6; }
 .item-thumb {
-  width: 100%;
-  max-height: 180px;
-  object-fit: cover;
-  margin-top: 12px;
-  border: 1px solid var(--border);
-  display: block;
+  width: 100%; max-height: 180px; object-fit: cover;
+  margin-top: 12px; border: 1px solid #999999; display: block;
 }
 .item-media-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 10px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  border: 1px solid var(--border);
-  background: var(--paper);
-  padding: 4px 10px;
-}
-@media (max-width: 480px) {
-  h1 { font-size: 1.3rem; }
-  .header { padding-top: 32px; }
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: #6b6657; border: 1px solid #999999; background: #ffffff; padding: 4px 10px;
 }
 </style>
 </head>
 <body>
-<div class="header">
-  <span class="badge">RSS Feed</span>
-  <h1>${escapeHtml(SITE_TITLE)}</h1>
-  <p>${escapeHtml(SITE_DESC)}</p>
-</div>
-<div class="info">
-  <strong>This is an RSS feed.</strong>
-  Copy the URL below and paste it into your favorite feed reader (NetNewsWire, Feedly, Inoreader, etc.) to subscribe and get new posts delivered automatically.
-  <br /><br />
-  <code class="feed-url">${SITE_URL}/feed.xml</code>
-</div>
-<div class="items">
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="${SITE_URL}/" class="site-logo">Beta Black Lotus</a>
+    <nav class="site-nav">
+          ${navHtml}
+          <a href="${SITE_URL}/feed.xml" class="nav-link active">RSS</a>
+    </nav>
+  </div>
+</header>
+
+<div class="page-content">
+  <div class="breadcrumb">
+    <a href="${SITE_URL}/">Home</a><span>/</span>RSS
+  </div>
+  <h1 class="page-title">RSS</h1>
+  <div class="feed-info">
+    <strong>This is an RSS feed.</strong>
+    Copy the URL below and paste it into your favorite feed reader (NetNewsWire, Feedly, Inoreader, etc.) to subscribe and get new posts delivered automatically.
+    <br /><br />
+    <code class="feed-url">${SITE_URL}/feed.xml</code>
+  </div>
+  <div class="items">
 ${items}
+  </div>
 </div>
+
 </body>
 </html>`;
 }
