@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { MediaProtect } from '../components/MediaProtect';
 import { Lightbox, useLightbox } from '../components/Lightbox';
-import { EditFab } from '../components/EditFab';
 import { renderMarkdown } from '../markdown';
 import { getPost, formatDate, getExcerpt, getBandcampEmbed, getBunnyVideo } from '../postStore';
 
@@ -202,7 +201,6 @@ export function PostPage({ slug }: PostPageProps) {
         />
       )}
 
-      <EditFab slug={post.slug} />
     </article>
   );
 }

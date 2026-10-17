@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
 import { isLoggedIn } from '../adminAuth';
 import { navigate } from '../router';
-import { Pencil } from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 
-interface EditFabProps {
-  slug?: string;
-  type?: 'post' | 'page';
-}
-
-export function EditFab({ slug, type = 'post' }: EditFabProps) {
+export function EditFab() {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
 
   useEffect(() => {
@@ -19,19 +14,10 @@ export function EditFab({ slug, type = 'post' }: EditFabProps) {
 
   if (!loggedIn) return null;
 
-  const handleClick = () => {
-    if (slug) {
-      const param = type === 'page' ? 'editPage' : 'edit';
-      navigate(`/backstage-3k9mxf2p7qw4?${param}=${encodeURIComponent(slug)}`);
-    } else {
-      navigate('/backstage-3k9mxf2p7qw4');
-    }
-  };
-
   return (
     <button
-      onClick={handleClick}
-      aria-label={slug ? `Edit this ${type}` : 'Admin panel'}
+      onClick={() => navigate('/backstage-3k9mxf2p7qw4')}
+      aria-label="Admin panel"
       style={{
         position: 'fixed',
         bottom: '1.5rem',
@@ -55,8 +41,8 @@ export function EditFab({ slug, type = 'post' }: EditFabProps) {
       onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.85'; }}
     >
-      <Pencil size={13} strokeWidth={2} />
-      {slug ? (type === 'page' ? 'Edit Page' : 'Edit Post') : 'Admin'}
+      <LayoutDashboard size={13} strokeWidth={2} />
+      Admin
     </button>
   );
 }

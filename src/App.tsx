@@ -12,6 +12,7 @@ import { StandalonePage } from './pages/StandalonePage';
 import { GalleryPreviewPage } from './pages/GalleryPreviewPage';
 import { loadPosts } from './postStore';
 import { loadPages } from './pageStore';
+import { EditFab } from './components/EditFab';
 
 function App() {
   const route = useRouter();
@@ -72,6 +73,7 @@ function App() {
         {isAdmin ? page : ready ? page : <div className="max-w-prose mx-auto px-4 sm:px-6 pt-20 text-center text-sm text-muted">Loading…</div>}
       </main>
       <Footer />
+      {!isAdmin && <EditFab />}
     </div>
   );
 }
