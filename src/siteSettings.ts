@@ -9,6 +9,9 @@ const DEFAULTS: SiteSettings = {
   tagline: 'We travel the spaceways from planet to planet.',
 };
 
+let cachedSettings: SiteSettings | null = null;
+let pendingFetch: Promise<SiteSettings> | null = null;
+
 const adminHeaders: Record<string, string> = {
   'Content-Type': 'application/json',
   apikey: ANON_KEY,
@@ -16,14 +19,26 @@ const adminHeaders: Record<string, string> = {
 };
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
-    method: 'POST',
-    headers: adminHeaders,
-    body: JSON.stringify({ action: 'getSiteSettings' }),
-  });
-  if (!res.ok) return { ...DEFAULTS };
-  const data = await res.json();
-  return { tagline: data.tagline ?? DEFAULTS.tagline };
+  if (cachedSettings) return cachedSettings;
+  if (!pendingFetch) {
+    pendingFetch = (async () => {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
+        method: 'POST',
+        headers: adminHeaders,
+        body: JSON.stringify({ action: 'getSiteSettings' }),
+      });
+      if (!res.ok) return { ...DEFAULTS };
+      const data = await res.json();
+      const settings = { tagline: data.tagline ?? DEFAULTS.tagline };
+      cachedSettings = settings;
+      return settings;
+    })();
+  }
+  return pendingFetch;
+}
+
+export function getCachedSiteSettings(): SiteSettings | null {
+  return cachedSettings;
 }
 
 export async function setSiteSettings(settings: SiteSettings): Promise<void> {
@@ -32,4 +47,5 @@ export async function setSiteSettings(settings: SiteSettings): Promise<void> {
     headers: adminHeaders,
     body: JSON.stringify({ action: 'setSiteSettings', tagline: settings.tagline, token: getToken() }),
   });
+  cachedSettings = { ...settings };
 }

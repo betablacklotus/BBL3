@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { PostCard } from '../components/PostCard';
 import { getAllPosts } from '../postStore';
 import { useMeta } from '../seo';
-import { getSiteSettings } from '../siteSettings';
+import { getSiteSettings, getCachedSiteSettings } from '../siteSettings';
 
 const PAGE_SIZE = 3;
 
@@ -16,11 +16,16 @@ export function HomePage() {
   const allPosts = getAllPosts();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loading, setLoading] = useState(false);
-  const [tagline, setTagline] = useState('We travel the spaceways from planet to planet.');
+  const cached = getCachedSiteSettings();
+  const [tagline, setTagline] = useState(cached?.tagline ?? '');
+  const [taglineLoaded, setTaglineLoaded] = useState(!!cached);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getSiteSettings().then((s) => setTagline(s.tagline));
+    getSiteSettings().then((s) => {
+      setTagline(s.tagline);
+      setTaglineLoaded(true);
+    });
   }, []);
 
   const hasMore = visibleCount < allPosts.length;
@@ -57,9 +62,11 @@ export function HomePage() {
       {/* Intro */}
       <div className="pt-10 pb-6 border-b rule">
         <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Beta Black Lotus</h1>
-        <p className="text-sm sm:text-base text-muted">
-          {tagline}
-        </p>
+        {taglineLoaded && tagline ? (
+          <p className="text-sm sm:text-base text-muted">
+            {tagline}
+          </p>
+        ) : null}
       </div>
 
       {/* Posts */}
