@@ -184,7 +184,7 @@
     border-bottom: none;
   }
 
-  body {
+  .no-select, .prose-mono, .post-card, .media-protect {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -192,7 +192,7 @@
     -webkit-touch-callout: none;
   }
 
-  input, textarea, [contenteditable] {
+  input, textarea, select, [contenteditable] {
     -webkit-user-select: text;
     -moz-user-select: text;
     -ms-user-select: text;
