@@ -9,8 +9,6 @@ const NAV_LINKS = [
   { label: 'Home', path: '/' },
   { label: 'Music', path: '/music' },
   { label: 'Videos', path: '/videos' },
-  { label: 'EPK', path: '/EPK' },
-  { label: 'Contact', path: '/contact' },
 ];
 
 export function Header() {
@@ -63,6 +61,8 @@ export function Header() {
 
   const pageNavLinks = getAllPages().filter((p) => p.showInHeader);
 
+  const pageHref = (slug: string) => (slug === 'epk' ? '/EPK' : slug === 'contact' ? '/contact' : `/page/${slug}`);
+
   const handleSearch = (q: string) => {
     setQuery(q);
     setResults(searchPosts(q).slice(0, 8));
@@ -107,9 +107,9 @@ export function Header() {
             {pageNavLinks.map((page) => (
               <a
                 key={page.slug}
-                href={`/page/${page.slug}`}
-                className={`nav-link text-sm ${route.path === '/page' && window.location.pathname === `/page/${page.slug}` ? 'active' : ''}`}
-                onClick={(e) => { e.preventDefault(); navigate(`/page/${page.slug}`); }}
+                href={pageHref(page.slug)}
+                className={`nav-link text-sm ${isActive(pageHref(page.slug)) ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); navigate(pageHref(page.slug)); }}
               >
                 {page.title}
               </a>
@@ -211,9 +211,9 @@ export function Header() {
               {pageNavLinks.map((page) => (
                 <a
                   key={page.slug}
-                  href={`/page/${page.slug}`}
+                  href={pageHref(page.slug)}
                   className="mobile-nav-link"
-                  onClick={(e) => { e.preventDefault(); navigate(`/page/${page.slug}`); setMenuOpen(false); }}
+                  onClick={(e) => { e.preventDefault(); navigate(pageHref(page.slug)); setMenuOpen(false); }}
                 >
                   {page.title}
                 </a>

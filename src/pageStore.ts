@@ -10,8 +10,8 @@ const BUILTIN_PAGES: Page[] = [
   {
     slug: 'epk',
     title: 'EPK',
-    showInHeader: false,
-    showInFooter: false,
+    showInHeader: true,
+    showInFooter: true,
     excerpt: 'About Beta Black Lotus.',
     content: `**Beta Black Lotus** is a personal weblog kept by its author. It is a notebook in public — a place to write down things I want to remember and share.
 
@@ -35,8 +35,8 @@ If you use an RSS reader, you can subscribe to the [RSS feed](/feed.xml). That i
   {
     slug: 'contact',
     title: 'Contact',
-    showInHeader: false,
-    showInFooter: false,
+    showInHeader: true,
+    showInFooter: true,
     excerpt: 'How to reach the author of Beta Black Lotus.',
     content: `The best way to reach me is by email. I read everything, though I cannot always reply.
 

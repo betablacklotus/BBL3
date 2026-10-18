@@ -11,7 +11,7 @@ import { AdminLoginPage } from './pages/AdminLoginPage';
 import { StandalonePage } from './pages/StandalonePage';
 import { GalleryPreviewPage } from './pages/GalleryPreviewPage';
 import { loadPosts } from './postStore';
-import { loadPages } from './pageStore';
+import { loadPages, getAllPages } from './pageStore';
 import { EditFab } from './components/EditFab';
 
 function App() {
@@ -104,6 +104,8 @@ function App() {
 }
 
 function Footer() {
+  const pageLinks = getAllPages().filter((p) => p.showInFooter);
+  const pageHref = (slug: string) => (slug === 'epk' ? '/EPK' : slug === 'contact' ? '/contact' : `/page/${slug}`);
   return (
     <footer className="border-t rule mt-20">
       <div className="max-w-page mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted">
@@ -114,8 +116,16 @@ function Footer() {
           <a href="/" style={{ textDecoration: 'none' }} onClick={(e) => { e.preventDefault(); navigate('/'); }}>Home</a>
           <a href="/music" style={{ textDecoration: 'none' }} onClick={(e) => { e.preventDefault(); navigate('/music'); }}>Music</a>
           <a href="/videos" style={{ textDecoration: 'none' }} onClick={(e) => { e.preventDefault(); navigate('/videos'); }}>Videos</a>
-          <a href="/EPK" style={{ textDecoration: 'none' }} onClick={(e) => { e.preventDefault(); navigate('/EPK'); }}>EPK</a>
-          <a href="/contact" style={{ textDecoration: 'none' }} onClick={(e) => { e.preventDefault(); navigate('/contact'); }}>Contact</a>
+          {pageLinks.map((page) => (
+            <a
+              key={page.slug}
+              href={pageHref(page.slug)}
+              style={{ textDecoration: 'none' }}
+              onClick={(e) => { e.preventDefault(); navigate(pageHref(page.slug)); }}
+            >
+              {page.title}
+            </a>
+          ))}
           <a href="/feed.xml" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>RSS</a>
         </div>
         <div>© {new Date().getFullYear()}</div>
