@@ -281,11 +281,14 @@ Deno.serve(async (req: Request) => {
 
     if (action === "getSiteSettings") {
       const settings = await fetchSettings();
-      return json({ tagline: settings.tagline ?? "We travel the spaceways from planet to planet." });
+      return json({
+        tagline: settings.tagline ?? "We travel the spaceways from planet to planet.",
+        siteTitle: settings.site_title ?? "Beta Black Lotus",
+      });
     }
 
     if (action === "setSiteSettings") {
-      await patchSettings({ tagline: body.tagline });
+      await patchSettings({ tagline: body.tagline, site_title: body.siteTitle });
       return json({ success: true });
     }
 

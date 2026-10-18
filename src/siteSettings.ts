@@ -2,10 +2,12 @@ import { SUPABASE_URL, ANON_KEY } from './supabaseConfig';
 import { getToken } from './adminAuth';
 
 export interface SiteSettings {
+  siteTitle: string;
   tagline: string;
 }
 
 const DEFAULTS: SiteSettings = {
+  siteTitle: 'Beta Black Lotus',
   tagline: 'We travel the spaceways from planet to planet.',
 };
 
@@ -29,7 +31,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       });
       if (!res.ok) return { ...DEFAULTS };
       const data = await res.json();
-      const settings = { tagline: data.tagline ?? DEFAULTS.tagline };
+      const settings = { tagline: data.tagline ?? DEFAULTS.tagline, siteTitle: data.siteTitle ?? DEFAULTS.siteTitle };
       cachedSettings = settings;
       return settings;
     })();

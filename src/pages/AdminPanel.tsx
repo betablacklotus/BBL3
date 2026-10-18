@@ -552,12 +552,14 @@ function SettingsTab({
 }
 
 function SiteSettingsForm() {
+  const [siteTitle, setSiteTitle] = useState('Beta Black Lotus');
   const [tagline, setTagline] = useState('We travel the spaceways from planet to planet.');
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getSiteSettings().then((s) => {
+      setSiteTitle(s.siteTitle);
       setTagline(s.tagline);
       setLoading(false);
     });
@@ -565,7 +567,7 @@ function SiteSettingsForm() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    await setSiteSettings({ tagline });
+    await setSiteSettings({ siteTitle, tagline });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -576,9 +578,19 @@ function SiteSettingsForm() {
     <div>
       <h2 className="text-base font-semibold mb-1">Site</h2>
       <p className="text-sm text-muted mb-5">
-        Controls the tagline shown beneath your site title on the home page.
+        Controls the title and tagline shown at the top of your home page. The header and footer wording are not affected.
       </p>
       <form onSubmit={handleSave} className="flex flex-col gap-4">
+        <div>
+          <label className="text-xs text-muted block mb-1">Home page title</label>
+          <input
+            type="text"
+            value={siteTitle}
+            onChange={(e) => setSiteTitle(e.target.value)}
+            className="field"
+            placeholder="Beta Black Lotus"
+          />
+        </div>
         <div>
           <label className="text-xs text-muted block mb-1">Home page tagline</label>
           <input

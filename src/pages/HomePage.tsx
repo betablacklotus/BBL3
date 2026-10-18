@@ -18,12 +18,14 @@ export function HomePage() {
   const [loading, setLoading] = useState(false);
   const cached = getCachedSiteSettings();
   const [tagline, setTagline] = useState(cached?.tagline ?? '');
+  const [siteTitle, setSiteTitle] = useState(cached?.siteTitle ?? '');
   const [taglineLoaded, setTaglineLoaded] = useState(!!cached);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     getSiteSettings().then((s) => {
       setTagline(s.tagline);
+      setSiteTitle(s.siteTitle);
       setTaglineLoaded(true);
     });
   }, []);
@@ -61,7 +63,7 @@ export function HomePage() {
     <div className="max-w-prose mx-auto px-4 sm:px-6">
       {/* Intro */}
       <div className="pt-10 pb-6 border-b rule">
-        <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Beta Black Lotus</h1>
+        <h1 className="text-2xl sm:text-3xl font-semibold mb-2">{siteTitle || 'Beta Black Lotus'}</h1>
         {taglineLoaded && tagline ? (
           <p className="text-sm sm:text-base text-muted">
             {tagline}
