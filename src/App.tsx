@@ -126,7 +126,6 @@ function Footer() {
               {page.title}
             </a>
           ))}
-          <a href="/feed.xml" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>RSS</a>
         </div>
         <div>© {new Date().getFullYear()}</div>
       </div>

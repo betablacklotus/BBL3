@@ -114,7 +114,6 @@ export function Header() {
                 {page.title}
               </a>
             ))}
-            <a href="/feed.xml" target="_blank" rel="noopener noreferrer" className="nav-link text-sm">RSS</a>
           </nav>
 
           {/* Right side: search + mobile menu */}
@@ -218,15 +217,6 @@ export function Header() {
                   {page.title}
                 </a>
               ))}
-              <a
-                href="/feed.xml"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mobile-nav-link"
-                onClick={() => setMenuOpen(false)}
-              >
-                RSS
-              </a>
             </div>
           </nav>
         </div>
