@@ -33,8 +33,7 @@ export function MediaProtect({ children, className = '' }: MediaProtectProps) {
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
-      // Block Ctrl+S, Ctrl+U, Ctrl+Shift+I when media is focused
-      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'u')) {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'u' || e.key === 'c')) {
         e.preventDefault();
       }
     };

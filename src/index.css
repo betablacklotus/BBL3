@@ -40,8 +40,8 @@
   }
 
   ::selection {
-    background: #1a1a1a;
-    color: #ffffff;
+    background: transparent;
+    color: inherit;
   }
 
   img {
@@ -182,6 +182,22 @@
 
   .post-card:last-child {
     border-bottom: none;
+  }
+
+  body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  input, textarea, [contenteditable] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
   }
 
   .media-protect {

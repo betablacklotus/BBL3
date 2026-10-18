@@ -25,6 +25,31 @@ function App() {
     })();
   }, []);
 
+  useEffect(() => {
+    const onCopy = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+      e.preventDefault();
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c' && window.getSelection()?.toString()) {
+        e.preventDefault();
+      }
+    };
+    document.addEventListener('copy', onCopy);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('copy', onCopy);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, []);
+
   const isAdmin = route.path === '/backstage-3k9mxf2p7qw4';
 
   let page;
