@@ -28,7 +28,7 @@ function inlineFormat(text: string): string {
   out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, url) => {
     if (!isSafeUrl(url)) return escapeHtml(`![${alt}](${url})`);
     if (isVideoUrl(url)) {
-      return `<video src="${url}" controls preload="metadata" loading="lazy"></video>`;
+      return `<video src="${url}" controls preload="metadata" loading="lazy" controlslist="nodownload" disablepictureinpicture oncontextmenu="return false"></video>`;
     }
     return `<img src="${url}" alt="${alt}" loading="lazy" />`;
   });
@@ -242,7 +242,7 @@ export function renderMarkdown(md: string): string {
       flushGallery();
       if (inList) { html.push(inOl ? '</ol>' : '</ul>'); inList = false; }
       if (inQuote) { html.push('</blockquote>'); inQuote = false; }
-      html.push(`<video src="${videoUrlMatch[1]}" controls preload="metadata" class="post-video"></video>`);
+      html.push(`<video src="${videoUrlMatch[1]}" controls preload="metadata" class="post-video" controlslist="nodownload" disablepictureinpicture oncontextmenu="return false"></video>`);
       continue;
     }
 

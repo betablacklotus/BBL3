@@ -150,6 +150,8 @@ export function PostPage({ slug }: PostPageProps) {
               src={post.featuredImage}
               controls
               preload="metadata"
+              controlsList="nodownload"
+              disablePictureInPicture
               className="w-full h-auto border rule"
             />
           ) : (

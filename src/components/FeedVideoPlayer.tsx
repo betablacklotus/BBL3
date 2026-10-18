@@ -55,6 +55,9 @@ export function FeedVideoPlayer({ src, title }: FeedVideoPlayerProps) {
         preload="metadata"
         playsInline
         controls={started}
+        controlsList="nodownload"
+        disablePictureInPicture
+        onContextMenu={(e) => e.preventDefault()}
         className="w-full h-full"
         style={{ objectFit: 'cover', display: 'block' }}
       />

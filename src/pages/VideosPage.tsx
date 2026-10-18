@@ -46,6 +46,8 @@ export function VideosPage() {
                         src={post.featuredImage}
                         preload="metadata"
                         muted
+                        controlsList="nodownload"
+                        disablePictureInPicture
                         onClick={() => navigate(`/${post.slug}`)}
                         className="w-full h-auto border rule cursor-pointer"
                         style={{ maxHeight: 280, objectFit: 'cover', display: 'block' }}
