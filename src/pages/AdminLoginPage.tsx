@@ -13,6 +13,15 @@ export function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
 
+  // Re-check token expiry every 30 seconds so the panel drops to login automatically
+  useEffect(() => {
+    if (!loggedIn) return;
+    const id = setInterval(() => {
+      if (!isLoggedIn()) setLoggedIn(false);
+    }, 30_000);
+    return () => clearInterval(id);
+  }, [loggedIn]);
+
   if (loggedIn && !mustChangePassword) {
     return <AdminPanel onLogout={() => { logout(); setLoggedIn(false); }} />;
   }

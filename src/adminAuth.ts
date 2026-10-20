@@ -22,6 +22,21 @@ export function getToken(): string | null {
   }
 }
 
+function tokenExpiry(token: string): number | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return typeof payload.exp === 'number' ? payload.exp : null;
+  } catch {
+    return null;
+  }
+}
+
+function isTokenValid(token: string): boolean {
+  const exp = tokenExpiry(token);
+  if (exp === null) return false;
+  return Math.floor(Date.now() / 1000) < exp;
+}
+
 export function setToken(token: string): void {
   try {
     localStorage.setItem(TOKEN_KEY, token);
@@ -63,7 +78,13 @@ export async function login(password: string): Promise<LoginResult> {
 }
 
 export function isLoggedIn(): boolean {
-  return getToken() !== null;
+  const token = getToken();
+  if (!token) return false;
+  if (!isTokenValid(token)) {
+    clearToken();
+    return false;
+  }
+  return true;
 }
 
 export function logout(): void {
